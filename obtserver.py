@@ -18,10 +18,10 @@
 #
 
 
-import pwn
+from pwn import *
 import socket
 import _thread
-import SmartSocket
+import smartsocket
 
 BUFF = 1024
 HOST = '127.0.0.1'
@@ -29,7 +29,7 @@ PORT = 11337
 
 
 def handler(client, addr):
-    smartsock = SmartSocket.SmartSocket(client)
+    smartsock = smartsocket.SmartSocket(client)
     try:
         data = smartsock.recv()
         if not data:
@@ -40,12 +40,12 @@ def handler(client, addr):
         if data == b"asm":
             smartsock.send("STATUS: OK - Begin")
             data = smartsock.recv()
-            senddata = pwn.asm(data)
+            senddata = asm(data)
             smartsock.send(senddata)
         elif data == b"disasm":
             smartsock.send("STATUS: OK - Begin")
             data = smartsock.recv()
-            senddata = pwn.disasm(data)
+            senddata = disasm(data)
             print(senddata)
             smartsock.send(senddata)
         else:
@@ -61,22 +61,6 @@ def handler(client, addr):
 
 def list_commands():
     return "Supported Commands\n\t1) asm\n\t2) disasm\n"
-
-if __name__ == '__main__':
-    """
-        Entry point to the application
-    """
-
-    ADDR = (HOST, PORT)
-    serversock = socket(AF_INET, SOCK_STREAM)
-    serversock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    serversock.bind(ADDR)
-    serversock.listen(5)
-    print('waiting for connection... listening on port ', PORT)
-    while 1:
-        client, addr = serversock.accept()
-        print("New connection from {}:{}".format(addr[0],addr[1]))
-        thread.start_new_thread(handler, (client, addr))
 
 def main():
     addr = (HOST, PORT)

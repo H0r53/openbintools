@@ -19,17 +19,16 @@
 
 
 import socket
-import SmartSocket
-import pwn
-
+import smartsocket
+from pwn import *
 
 def main():
-    bin = pwn.ELF('/bin/ls')
+    bin = ELF('/bin/ls')
     s = socket.socket()
     host = 'localhost'  # needs to be in quote
     port = 11337
     s.connect((host, port))
-    smartsock = SmartSocket.SmartSocket(s)
+    smartsock = smartsocket.SmartSocket(s)
     smartsock.send("disasm")
     data = smartsock.recv()
     print(data)
