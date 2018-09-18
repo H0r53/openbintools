@@ -1,11 +1,16 @@
 #!/usr/bin/python3
-#
+
+"""
 # Authors:      Jacob Mills, Brandon Everhart
 # Date:         09/17/2018
 #
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
+#   - 9/18 Added module, method, and class docstrings
+#   - 9/18 Cleaned formatting based on PyCharm, PyLint3, PEP8
+#   - 9/18 PyLint score 8.33 --> 9.79/10
+#
 #   - Moved to python3
 #   - import thread --> import _thread (name changed in py3)
 #   - from pwn import * --> import pwn (best practice)
@@ -16,10 +21,11 @@
 #   - Changed types from str to bytes for SmartSocket (required for py3 ??)
 #
 #
+"""
 
 
-import pwn
 import socket
+import pwn
 import _thread
 import smartsocket
 
@@ -29,6 +35,12 @@ PORT = 11337
 
 
 def handler(client, addr):
+    """
+    Function DocString
+    :param client:
+    :param addr:
+    :return:
+    """
     smartsock = smartsocket.SmartSocket(client)
     try:
         data = smartsock.recv()
@@ -51,18 +63,30 @@ def handler(client, addr):
         else:
             smartsock.send("STATUS: ERROR\n")
             smartsock.send(list_commands())
-    except Exception as e:
-        error = "ERROR: \n\tType: {}\n\tArgs: {}\n\tInfo: {}".format(type(e), e.args, e)
+
+    except Exception as exp:
+        # Exception is to broad
+        error = "ERROR: \n\tType: {}\n\tArgs: {}\n\tInfo: {}".format(type(exp), exp.args, exp)
         print(error)
         smartsock.send(error)
 
     smartsock.close()
     print("Connection to {} closed".format(repr(addr)))
 
+
 def list_commands():
+    """
+    Function DocString
+    :return:
+    """
     return "Supported Commands\n\t1) asm\n\t2) disasm\n"
 
+
 def main():
+    """
+    Function DocString
+    :return:
+    """
     addr = (HOST, PORT)
     serversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serversock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -77,5 +101,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
