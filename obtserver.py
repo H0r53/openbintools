@@ -1,93 +1,83 @@
-#!/usr/bin/python
-# Authors:      Jacob Mills
-# Date:         09/09/2018
+#!/usr/bin/python3
+#
+# Authors:      Jacob Mills, Brandon Everhart
+# Date:         09/17/2018
+#
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
-#
-#
+#   - Moved to python3
+#   - import thread --> import _thread (name changed in py3)
+#   - from pwn import * --> import pwn (best practice)
+#   - from socket import * --> import socket (best practice)
+#   - Cleaned formatting according to PyCharm and PEP8
+#   - def main()
+#   - Moved SmartSocket class to SmartSocket.py
+#   - Changed types from str to bytes for SmartSocket (required for py3 ??)
 #
 #
 
 
-from pwn import *
-from socket import *
-import thread
+import pwn
+import socket
+import _thread
+import SmartSocket
 
 BUFF = 1024
 HOST = '127.0.0.1'
 PORT = 11337
 
-class SmartSocket(object):
-    def __init__(self,socket):
-        self.socket = socket
 
-    def send(self,data):
-        self.socket.sendall(struct.pack('!I',len(data)))
-        self.socket.sendall(data)
-
-    def recv(self):
-        lengthbuf = self.recvall(4)
-        length, = struct.unpack('!I', lengthbuf)
-        return self.recvall(length)
-
-    def recvall(self,count):
-        retval = b''
-        while count:
-            recbuffer = self.socket.recv(count)
-            if not recbuffer:
-                return None
-            retval += recbuffer
-            count -= len(recbuffer)
-        return retval
-
-    def close(self):
-        self.socket.close()
-
-
-def handler(client,addr):
-    smartsock = SmartSocket(client)
+def handler(client, addr):
+    smartsock = SmartSocket.SmartSocket(client)
     try:
         data = smartsock.recv()
         if not data:
             raise Exception("No data")
-        print "Data received from {}: {}".format(repr(addr),data)
+        print("Data received from {}: {}".format(repr(addr), data))
 
         # Match request
-        if data == "asm":
+        if data == b"asm":
             smartsock.send("STATUS: OK - Begin")
             data = smartsock.recv()
-            senddata = asm(data)
+            senddata = pwn.asm(data)
             smartsock.send(senddata)
-        elif data == "disasm":
+        elif data == b"disasm":
             smartsock.send("STATUS: OK - Begin")
             data = smartsock.recv()
-            senddata = disasm(data)
-            print senddata
+            senddata = pwn.disasm(data)
+            print(senddata)
             smartsock.send(senddata)
         else:
             smartsock.send("STATUS: ERROR\n")
             smartsock.send(list_commands())
     except Exception as e:
-        error = "ERROR: \n\tType: {}\n\tArgs: {}\n\tInfo: {}".format(type(e),e.args,e)
-        print error
+        error = "ERROR: \n\tType: {}\n\tArgs: {}\n\tInfo: {}".format(type(e), e.args, e)
+        print(error)
         smartsock.send(error)
 
     smartsock.close()
-    print "Connection to {} closed".format(repr(addr))
+    print("Connection to {} closed".format(repr(addr)))
+
 
 def list_commands():
     return "Supported Commands\n\t1) asm\n\t2) disasm\n"
 
-if __name__=='__main__':
-    ADDR = (HOST, PORT)
-    serversock = socket(AF_INET, SOCK_STREAM)
-    serversock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    serversock.bind(ADDR)
+
+def main():
+    addr = (HOST, PORT)
+    serversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serversock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    serversock.bind(addr)
     serversock.listen(5)
-    print 'waiting for connection... listening on port', PORT
+    print('waiting for connection... listening on port', PORT)
     while 1:
         client, addr = serversock.accept()
-        print "New connection from {}:{}".format(addr[0],addr[1])
-        thread.start_new_thread(handler, (client, addr))
+        print("New connection from {}:{}".format(addr[0], addr[1]))
+        _thread.start_new_thread(handler, (client, addr))
+
+
+if __name__ == '__main__':
+    main()
+
 
