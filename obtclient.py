@@ -20,10 +20,10 @@
 
 import socket
 import smartsocket
-from pwn import *
+import pwn
 
 def main():
-    bin = ELF('/bin/ls')
+    bin = pwn.ELF('/bin/ls')
     s = socket.socket()
     host = 'localhost'  # needs to be in quote
     port = 11337

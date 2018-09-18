@@ -18,7 +18,7 @@
 #
 
 
-from pwn import *
+import pwn
 import socket
 import _thread
 import smartsocket
@@ -40,12 +40,12 @@ def handler(client, addr):
         if data == b"asm":
             smartsock.send("STATUS: OK - Begin")
             data = smartsock.recv()
-            senddata = asm(data)
+            senddata = pwn.asm(data)
             smartsock.send(senddata)
         elif data == b"disasm":
             smartsock.send("STATUS: OK - Begin")
             data = smartsock.recv()
-            senddata = disasm(data)
+            senddata = pwn.disasm(data)
             print(senddata)
             smartsock.send(senddata)
         else:
