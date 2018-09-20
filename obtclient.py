@@ -7,6 +7,7 @@
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
+#   - 9/20 Fixed display issues with help command
 #   - 9/19 OpenBinTool cli, load, and quit methods
 #
 #   - 9/18 Added module, method, and class docstrings
@@ -126,11 +127,11 @@ class OpenBinTool(object):
         :return:
         """
         print("Supported Commands:")
-        print("\t(l)oad FILE\t\tLoads the file named FILE")
-        print("\t(a)sm FILE\t\tAssembles instructions at FILE")
-        print("\t(d)isasm\t\tDisassembles the currently loaded file")
-        print("\t(q)uit\t\tExit program")
-        print("\t(h)elp\t\tDisplay this message")
+        print("\t(l)oad FILE \tLoads the file named FILE")
+        print("\t(a)sm FILE  \tAssembles instructions at FILE")
+        print("\t(d)isasm    \tDisassembles the currently loaded file")
+        print("\t(q)uit      \tExit program")
+        print("\t(h)elp      \tDisplay this message")
 
 
 def main():
