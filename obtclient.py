@@ -7,6 +7,8 @@
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
+#   - 9/19 OpenBinTool cli, load, and quit methods
+#
 #   - 9/18 Added module, method, and class docstrings
 #   - 9/18 Cleaned formatting based on PyCharm, PyLint3, PEP8
 #   - 9/18 PyLint score 6.79 --> 10.00/10
@@ -23,6 +25,7 @@
 #
 """
 
+import sys
 import socket
 import pwn
 import smartsocket
@@ -50,6 +53,62 @@ class OpenBinTool(object):
         self.socket = socket.socket()
         self.socket.connect((host, port))
         self.smartsock = smartsocket.SmartSocket(self.socket)
+
+    def load(self, file):
+        """
+        Method OpenBinTool.load()
+        :param file:
+        :return:
+        """
+        binary = pwn.ELF(file)
+        self.binary = binary.get_section_by_name('.text').data()
+
+    def quit(self):
+        """
+        Method OpenBinTool.quit()
+        :return:
+        """
+        if self.smartsock:
+            self.smartsock.close()
+        print("Quiting OpenBinTool...")
+        sys.exit()
+
+    def cli(self, host, port):
+        """
+        Method cli()
+        :param host:
+        :param port:
+        :return:
+        """
+        # Process user command
+        cmd = None
+        while True:
+            cmd = input("> ")
+            if cmd in ["q", "quit"]:
+                self.quit()
+            elif cmd in ["h", "help"]:
+                self.usage()
+            elif cmd in ["l", "load"]:
+                file = "/bin/ls"  # debugging only
+                self.load(file)
+            elif cmd in ["d", "disasm"]:
+                # Check to see if binary is loaded
+                if self.binary:
+                    self.connect(host, port)
+                    self.smartsock.send("disasm")
+                    data = self.smartsock.recv()
+                    print(data)
+                    if data == b"STATUS: OK - Begin":
+                        # Binary
+                        self.smartsock.send(self.binary)
+                        data = self.smartsock.recv()
+                        print(data.decode('utf-8'))
+                    self.smartsock.close()
+                else:
+                    print("Error: no binary loaded")
+            else:
+                print("Command {} currently not supported".format(cmd))
+                print("Enter (h)elp for a list of commands")
 
     @staticmethod
     def welcome():
@@ -82,41 +141,13 @@ def main():
     # Local variables
     host = 'localhost'  # needs to be in quote
     port = 11337
-    cmd = None
     tool = OpenBinTool()
 
     # Welcome message
     tool.welcome()
 
-    # Process user command
-    while True:
-        cmd = input("> ")
-        if cmd in ["q", "quit"]:
-            break
-        elif cmd in ["h", "help"]:
-            tool.usage()
-        elif cmd in ["l", "load"]:
-            binary = pwn.ELF("/bin/ls")  # Debug only
-            tool.binary = binary.get_section_by_name('.text').data()
-        elif cmd in ["d", "disasm"]:
-            # Check to see if binary is loaded
-            if tool.binary:
-                tool.connect(host, port)
-                tool.smartsock.send("disasm")
-                data = tool.smartsock.recv()
-                print(data)
-                if data == b"STATUS: OK - Begin":
-                    # Binary
-                    tool.smartsock.send(tool.binary)
-                    data = tool.smartsock.recv()
-                    print(data.decode('utf-8'))
-                tool.smartsock.close()
-            else:
-                print("Error: no binary loaded")
-
-        else:
-            print("Command {} currently not supported".format(cmd))
-            print("Enter (h)elp for a list of commands")
+    # Command Line Interface
+    tool.cli(host, port)
 
 
 if __name__ == "__main__":
