@@ -2,12 +2,12 @@
 
 """
 # Authors:      Jacob Mills, Brandon Everhart
-# Date:         09/20/2018
+# Date:         09/22/2018
 #
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
-#   - 9/20 Added crypto
+#   - 9/22 Added crypto
 #
 #   - 9/18 Added module, method, and class docstrings
 #   - 9/18 Cleaned formatting based on PyCharm, PyLint3, PEP8
@@ -35,13 +35,21 @@ class SmartSocket(object):
         :param socket:
         """
         self.socket = socket
-        self.blocksize = Blowfish.block_size
-        self.key = b'arbitrarily long key'
-        self.mode = Blowfish.MODE_CBC
+        self.blocksize = Blowfish.block_size    # Default Blowfish blocksize
+        self.key = b'arbitrarily long key'      # Need to implement key exchange
+        self.mode = Blowfish.MODE_CBC           # Do we want CBC??
 
     def send(self, data, encrypt=False):
         """
         Method SmartSocket.send()
+
+        A '1' or '0' is appended to the beginning of the msg to represent if
+        encryption/decryption is needed, this means when receiving data we
+        must check and remove the first byte.
+
+        However, when sending the length of the buffer the extra byte is not sent
+            so the getlen flag is added to the recv and recvall method
+
         :param data:
         :param encrypt:
         :return:
@@ -57,7 +65,15 @@ class SmartSocket(object):
 
     def recv(self):
         """
-        Method DocString
+        Method SmartSock.recv()
+
+        A '1' or '0' is appended to the beginning of the msg to represent if
+        encryption/decryption is needed, this means when receiving data we
+        must check and remove the first byte.
+
+        However, when sending the length of the buffer the extra byte is not sent
+            so the getlen flag is added to the recv and recvall method
+
         :return:
         """
         lengthbuf = self.recvall(4, getlen=True)
@@ -66,7 +82,7 @@ class SmartSocket(object):
 
     def recvall(self, count, getlen=False):
         """
-        Method DocString
+        Method SmartSock.recvall()
         :param count:
         :return:
         """
@@ -78,10 +94,10 @@ class SmartSocket(object):
             retval += recbuffer
             count -= len(recbuffer)
         if getlen:
-            return retval
-        elif retval[0] == 49:
+            return retval  # no extra byte was sent
+        elif retval[0] == 49:  # encrypt == True == 1 --> ord(1) == 49
             return self.decrypt(retval[1:])
-        return retval[1:]
+        return retval[1:]  # encryption isn't being used
 
     def encrypt(self, plaintext):
         """
@@ -91,9 +107,7 @@ class SmartSocket(object):
         """
         nonce = Random.new().read(self.blocksize)
         cipher = Blowfish.new(self.key, self.mode, nonce)
-        length = self.blocksize - divmod(len(plaintext), self.blocksize)[1]
-        padding = [length]*length
-        padding = struct.pack('b'*length, *padding)
+        padding = self.pad(plaintext)
         msg = nonce + cipher.encrypt(plaintext + padding)
         return msg
 
@@ -106,10 +120,47 @@ class SmartSocket(object):
         nonce = ciphertext[:self.blocksize]
         ciphertext = ciphertext[self.blocksize:]
         cipher = Blowfish.new(self.key, self.mode, nonce)
-        msg = cipher.decrypt(ciphertext)
-        last_byte = msg[-1]
-        msg = msg[:- (last_byte if isinstance(last_byte, int) else ord(last_byte))]
+        padded_msg = cipher.decrypt(ciphertext)
+        msg = self.unpad(padded_msg)
         return msg
+
+    def pad(self, plaintext):
+        """
+        Method SmartSocket.pad()
+
+        msg is padded with the repeated bytes of the pad length.
+        The last byte encodes how many bytes of padding to remove
+
+        Example:
+            if blocksize = 20 and len(msg) = 14
+                then pad_length = 6
+            then
+                padding = \x06\x06\x06\x06\x06\x06\
+            and
+                msg = msg + padding\
+
+        :param plaintext:
+        :return:
+        """
+        pad_length = self.blocksize - (len(plaintext) % self.blocksize)
+        padding = [pad_length] * pad_length
+        return struct.pack('b' * pad_length, *padding)
+
+    @staticmethod
+    def unpad(msg):
+        """
+        Method SmartSocket.unpad()
+
+        The last byte encodes how many bytes of padding to remove
+
+        :param msg:
+        :return:
+        """
+        if isinstance(msg[-1], int):
+            pad_length = msg[-1]
+        else:
+            pad_length = ord(msg[-1])
+        return msg[:-pad_length]
 
     def close(self):
         """
