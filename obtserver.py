@@ -28,6 +28,7 @@ import socket
 import pwn
 import _thread
 import smartsocket
+import obtdisasm
 
 BUFF = 1024
 HOST = '127.0.0.1'
@@ -42,6 +43,7 @@ def handler(client, addr):
     :return:
     """
     smartsock = smartsocket.SmartSocket(client)
+    disassembler = obtdisasm.ObtDisasm()
     try:
         data = smartsock.recv()
         if not data:
@@ -57,7 +59,7 @@ def handler(client, addr):
         elif data == b"disasm":
             smartsock.send("STATUS: OK - Begin")
             data = smartsock.recv()
-            senddata = pwn.disasm(data)
+            senddata = disassembler.disasm(data)
             print(senddata)
             smartsock.send(senddata)
         else:

@@ -43,6 +43,7 @@ class OpenBinTool(object):
         self.binary = None
         self.socket = None
         self.smartsock = None
+        self.encrypt = False
 
     def connect(self, host, port):
         """
@@ -92,16 +93,19 @@ class OpenBinTool(object):
             elif cmd in ["l", "load"]:
                 file = "/bin/ls"  # debugging only
                 self.load(file)
+            elif cmd in ["e", "encrypt"]:
+                self.encrypt = not self.encrypt
+                print("Encrypt =", self.encrypt)
             elif cmd in ["d", "disasm"]:
                 # Check to see if binary is loaded
                 if self.binary:
                     self.connect(host, port)
-                    self.smartsock.send("disasm")
+                    self.smartsock.send("disasm", self.encrypt)
                     data = self.smartsock.recv()
                     print(data)
                     if data == b"STATUS: OK - Begin":
                         # Binary
-                        self.smartsock.send(self.binary)
+                        self.smartsock.send(self.binary, self.encrypt)
                         data = self.smartsock.recv()
                         print(data.decode('utf-8'))
                     self.smartsock.close()
@@ -128,6 +132,7 @@ class OpenBinTool(object):
         """
         print("Supported Commands:")
         print("\t(l)oad FILE \tLoads the file named FILE")
+        print("\t(e)ncrypt   \tToggle encryption of communication")
         print("\t(a)sm FILE  \tAssembles instructions at FILE")
         print("\t(d)isasm    \tDisassembles the currently loaded file")
         print("\t(q)uit      \tExit program")
