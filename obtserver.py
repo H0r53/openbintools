@@ -7,6 +7,10 @@
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
+#   - 9/22 Encryt command now toggles encryption on the server as well
+#   - 9/22 Global Encrypt is bad practice
+#   - 9/22 Pylint score 9.79 --> 9.64/10
+#
 #   - 9/18 Added module, method, and class docstrings
 #   - 9/18 Cleaned formatting based on PyCharm, PyLint3, PEP8
 #   - 9/18 PyLint score 8.33 --> 9.79/10
@@ -34,6 +38,8 @@ BUFF = 1024
 HOST = '127.0.0.1'
 PORT = 11337
 
+ENCRYPT = False
+
 
 def handler(client, addr):
     """
@@ -42,6 +48,7 @@ def handler(client, addr):
     :param addr:
     :return:
     """
+    global ENCRYPT
     smartsock = smartsocket.SmartSocket(client)
     disassembler = obtdisasm.ObtDisasm()
     try:
@@ -52,16 +59,19 @@ def handler(client, addr):
 
         # Match request
         if data == b"asm":
-            smartsock.send("STATUS: OK - Begin")
+            smartsock.send("STATUS: OK - Begin", ENCRYPT)
             data = smartsock.recv()
             senddata = pwn.asm(data)
-            smartsock.send(senddata)
+            smartsock.send(senddata, ENCRYPT)
         elif data == b"disasm":
-            smartsock.send("STATUS: OK - Begin")
+            smartsock.send("STATUS: OK - Begin", ENCRYPT)
             data = smartsock.recv()
             senddata = disassembler.disasm(data)
             print(senddata)
-            smartsock.send(senddata)
+            smartsock.send(senddata, ENCRYPT)
+        elif data == b"encrypt":
+            ENCRYPT = not ENCRYPT
+            smartsock.send("STATUS: OK - Begin", ENCRYPT)
         else:
             smartsock.send("STATUS: ERROR\n")
             smartsock.send(list_commands())

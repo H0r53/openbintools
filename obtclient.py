@@ -94,7 +94,11 @@ class OpenBinTool(object):
                 file = "/bin/ls"  # debugging only
                 self.load(file)
             elif cmd in ["e", "encrypt"]:
+                self.connect(host, port)
                 self.encrypt = not self.encrypt
+                self.smartsock.send("encrypt", self.encrypt)
+                data = self.smartsock.recv()
+                print(data)
                 print("Encrypt =", self.encrypt)
             elif cmd in ["d", "disasm"]:
                 # Check to see if binary is loaded
