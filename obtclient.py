@@ -7,6 +7,8 @@
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
+#   - 9/22 Added DH key Exchange
+#
 #   - 9/20 Fixed display issues with help command
 #   - 9/19 OpenBinTool cli, load, and quit methods
 #
@@ -43,7 +45,7 @@ class OpenBinTool(object):
         self.binary = None
         self.socket = None
         self.smartsock = None
-        self.encrypt = False
+        # self.encrypt = False Used if toggling crypto
 
     def connect(self, host, port):
         """
@@ -55,6 +57,20 @@ class OpenBinTool(object):
         self.socket = socket.socket()
         self.socket.connect((host, port))
         self.smartsock = smartsocket.SmartSocket(self.socket)
+        self.smartsock.key = self.keyexchange()
+
+    def keyexchange(self):
+        """
+        Method OpenBinTool.keyexchange()
+        Diffie Hellman key exchange
+        :return:
+        """
+        aa = (self.smartsock.sharedBase**self.smartsock.secret) % self.smartsock.sharedPrime
+        self.smartsock.send(str(aa))
+        bb = int(self.smartsock.recv())
+        key = (bb**self.smartsock.secret) % self.smartsock.sharedPrime
+        key = bytes(str(key), 'utf-8')
+        return key
 
     def load(self, file):
         """
@@ -93,23 +109,24 @@ class OpenBinTool(object):
             elif cmd in ["l", "load"]:
                 file = "/bin/ls"  # debugging only
                 self.load(file)
-            elif cmd in ["e", "encrypt"]:
-                self.connect(host, port)
-                self.encrypt = not self.encrypt
-                self.smartsock.send("encrypt", self.encrypt)
-                data = self.smartsock.recv()
-                print(data)
-                print("Encrypt =", self.encrypt)
+            # Used if toggling crypto
+            # elif cmd in ["e", "encrypt"]:
+            #     self.connect(host, port)
+            #     self.encrypt = not self.encrypt
+            #     self.smartsock.send("encrypt", self.encrypt)
+            #     data = self.smartsock.recv()
+            #     print(data)
+            #     print("Encrypt =", self.encrypt)
             elif cmd in ["d", "disasm"]:
                 # Check to see if binary is loaded
                 if self.binary:
                     self.connect(host, port)
-                    self.smartsock.send("disasm", self.encrypt)
+                    self.smartsock.send("disasm")  # , self.encrypt) Used if toggling crypto
                     data = self.smartsock.recv()
                     print(data)
                     if data == b"STATUS: OK - Begin":
                         # Binary
-                        self.smartsock.send(self.binary, self.encrypt)
+                        self.smartsock.send(self.binary)  # , self.encrypt) Used if toggling crypto
                         data = self.smartsock.recv()
                         print(data.decode('utf-8'))
                     self.smartsock.close()
@@ -136,7 +153,7 @@ class OpenBinTool(object):
         """
         print("Supported Commands:")
         print("\t(l)oad FILE \tLoads the file named FILE")
-        print("\t(e)ncrypt   \tToggle encryption of communication")
+        # print("\t(e)ncrypt   \tToggle encryption of communication") Used if toggling crypto
         print("\t(a)sm FILE  \tAssembles instructions at FILE")
         print("\t(d)isasm    \tDisassembles the currently loaded file")
         print("\t(q)uit      \tExit program")

@@ -21,6 +21,7 @@
 """
 
 import struct
+import random
 from Crypto.Cipher import Blowfish
 from Crypto import Random
 
@@ -36,10 +37,13 @@ class SmartSocket(object):
         """
         self.socket = socket
         self.blocksize = Blowfish.block_size    # Default Blowfish blocksize
+        self.sharedPrime = 23
+        self.sharedBase = 5
+        self.secret = random.SystemRandom().getrandbits(20)
         self.key = b'arbitrarily long key'      # Need to implement key exchange
         self.mode = Blowfish.MODE_CBC           # Do we want CBC??
 
-    def send(self, data, encrypt=False):
+    def send(self, data):  # , encrypt=False): used if toggling crypto
         """
         Method SmartSocket.send()
 
@@ -56,12 +60,16 @@ class SmartSocket(object):
         """
         if not isinstance(data, bytes):
             data = bytes(data, 'utf-8')
-        if encrypt:
-            data = b'1' + self.encrypt(data)
-        else:
-            data = b'0' + data
-        self.socket.sendall(struct.pack('!I', len(data)))
-        self.socket.sendall(data)
+
+        # Used if toggling crypto
+        # if encrypt:
+        #     data = b'1' + self.encrypt(data)
+        # else:
+        #     data = b'0' + data
+
+        ciphertext = self.encrypt(data)
+        self.socket.sendall(struct.pack('!I', len(ciphertext)))
+        self.socket.sendall(ciphertext)
 
     def recv(self):
         """
@@ -76,11 +84,12 @@ class SmartSocket(object):
 
         :return:
         """
-        lengthbuf = self.recvall(4, getlen=True)
+        lengthbuf = self.recvall(4)  # , getlen=True) Used if toggling crypto
         length, = struct.unpack('!I', lengthbuf)
-        return self.recvall(length)
+        ciphertext = self.recvall(length)
+        return self.decrypt(ciphertext)
 
-    def recvall(self, count, getlen=False):
+    def recvall(self, count):  # , getlen=False): Used if toggling crypto
         """
         Method SmartSock.recvall()
         :param count:
@@ -93,11 +102,15 @@ class SmartSocket(object):
                 return None
             retval += recbuffer
             count -= len(recbuffer)
-        if getlen:
-            return retval  # no extra byte was sent
-        elif retval[0] == 49:  # encrypt == True == 1 --> ord(1) == 49
-            return self.decrypt(retval[1:])
-        return retval[1:]  # encryption isn't being used
+
+        # Used if toggling crypto
+        # if getlen:
+        #     return retval  # no extra byte was sent
+        # elif retval[0] == 49:  # encrypt == True == 1 --> ord(1) == 49
+        #     return self.decrypt(retval[1:])
+        # return retval[1:]  # encryption isn't being used
+
+        return retval
 
     def encrypt(self, plaintext):
         """
