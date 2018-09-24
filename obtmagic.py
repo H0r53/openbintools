@@ -28,6 +28,7 @@ class MagicTool(object):
         self.loadfiles()
 
     def find_magic(self, sourcebytes):
+        retval = ""
         matches = 0
         for file in self.files:
             found = True
@@ -39,11 +40,13 @@ class MagicTool(object):
                     found = False
                     break
             if found:
-                print("{}".format(file.description))
+                retval += "{}\n".format(file.description)
                 matches += 1
 
         if matches < 1:
-            print("No matches found. This may be data or text.")
+            retval = "No matches found. This may be data or text."
+
+        return retval
 
     def loadfiles(self):
         """

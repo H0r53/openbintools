@@ -32,6 +32,7 @@ import sys
 import socket
 import pwn
 import smartsocket
+import obtmagic
 
 
 class OpenBinTool(object):
@@ -42,7 +43,11 @@ class OpenBinTool(object):
         """
         Method DocString
         """
+        # These data should eventually be replaced by a class containing binary data and segments
         self.binary = None
+        self.text = None
+
+        # Networking data
         self.socket = None
         self.smartsock = None
         # self.encrypt = False Used if toggling crypto
@@ -79,7 +84,10 @@ class OpenBinTool(object):
         :return:
         """
         binary = pwn.ELF(file)
-        self.binary = binary.get_section_by_name('.text').data()
+        fd = open(file, 'rb')
+        self.binary = fd.read()
+        self.text = binary.get_section_by_name('.text').data()
+        fd.close()
 
     def quit(self):
         """
@@ -106,6 +114,13 @@ class OpenBinTool(object):
                 self.quit()
             elif cmd in ["h", "help"]:
                 self.usage()
+            elif cmd in ["f", "file"]:
+                if self.binary:
+                    magic_tool = obtmagic.MagicTool()
+                    mt_result = magic_tool.find_magic(self.binary)
+                    print(mt_result)
+                else:
+                    print("Error: no binary loaded")
             elif cmd in ["l", "load"]:
                 file = "/bin/ls"  # debugging only
                 self.load(file)
@@ -119,14 +134,14 @@ class OpenBinTool(object):
             #     print("Encrypt =", self.encrypt)
             elif cmd in ["d", "disasm"]:
                 # Check to see if binary is loaded
-                if self.binary:
+                if self.text:
                     self.connect(host, port)
                     self.smartsock.send("disasm")  # , self.encrypt) Used if toggling crypto
                     data = self.smartsock.recv()
                     print(data)
                     if data == b"STATUS: OK - Begin":
                         # Binary
-                        self.smartsock.send(self.binary)  # , self.encrypt) Used if toggling crypto
+                        self.smartsock.send(self.text)  # , self.encrypt) Used if toggling crypto
                         data = self.smartsock.recv()
                         print(data.decode('utf-8'))
                     self.smartsock.close()
@@ -156,6 +171,7 @@ class OpenBinTool(object):
         # print("\t(e)ncrypt   \tToggle encryption of communication") Used if toggling crypto
         print("\t(a)sm FILE  \tAssembles instructions at FILE")
         print("\t(d)isasm    \tDisassembles the currently loaded file")
+        print("\t(f)ile      \tIdentify filetype of currently loaded")
         print("\t(q)uit      \tExit program")
         print("\t(h)elp      \tDisplay this message")
 
