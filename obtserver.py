@@ -7,6 +7,11 @@
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
 # Changelog:
+#   - 9/22 Added DH key Exchange
+#   - 9/22 Encryt command now toggles encryption on the server as well
+#   - 9/22 Global Encrypt is bad practice
+#   - 9/22 Pylint score 9.79 --> 9.64/10
+#
 #   - 9/18 Added module, method, and class docstrings
 #   - 9/18 Cleaned formatting based on PyCharm, PyLint3, PEP8
 #   - 9/18 PyLint score 8.33 --> 9.79/10
@@ -28,10 +33,13 @@ import socket
 import pwn
 import _thread
 import smartsocket
+import obtdisasm
 
 BUFF = 1024
 HOST = '127.0.0.1'
 PORT = 11337
+
+# ENCRYPT = False Used if toggling crypto
 
 
 def handler(client, addr):
@@ -41,8 +49,17 @@ def handler(client, addr):
     :param addr:
     :return:
     """
+    # global ENCRYPT Used if toggling crypto
     smartsock = smartsocket.SmartSocket(client)
+    disassembler = obtdisasm.ObtDisasm()
     try:
+        # Diffie Hellman Key Exchange
+        aa = int(smartsock.recv())
+        bb = (smartsock.sharedBase ** smartsock.secret) % smartsock.sharedPrime
+        smartsock.send(str(bb))
+        key = (aa ** smartsock.secret) % smartsock.sharedPrime
+        smartsock.key = bytes(str(key), 'utf-8')
+
         data = smartsock.recv()
         if not data:
             raise Exception("No data")
@@ -50,16 +67,20 @@ def handler(client, addr):
 
         # Match request
         if data == b"asm":
-            smartsock.send("STATUS: OK - Begin")
+            smartsock.send("STATUS: OK - Begin")  # , ENCRYPT) Used if toggling crypto
             data = smartsock.recv()
             senddata = pwn.asm(data)
-            smartsock.send(senddata)
+            smartsock.send(senddata)  # , ENCRYPT) Used if toggling crypto
         elif data == b"disasm":
-            smartsock.send("STATUS: OK - Begin")
+            smartsock.send("STATUS: OK - Begin")  # , ENCRYPT) Used if toggling crypto
             data = smartsock.recv()
-            senddata = pwn.disasm(data)
+            senddata = disassembler.disasm(data)
             print(senddata)
-            smartsock.send(senddata)
+            smartsock.send(senddata)  # , ENCRYPT) Used if toggling crypto
+        # Used if toggling crypto
+        # elif data == b"encrypt":
+        #     ENCRYPT = not ENCRYPT
+        #     smartsock.send("STATUS: OK - Begin", ENCRYPT)
         else:
             smartsock.send("STATUS: ERROR\n")
             smartsock.send(list_commands())
