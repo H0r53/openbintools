@@ -12,6 +12,8 @@ if [ ! -d ~/Repos ]; then
 	echo "Creating directory ~/Repos"
 	mkdir ~/Repos
 fi
+echo "Installing requests lib"
+pip3 install requests
 cd ~/Repos
 echo "Cloning radare2"
 git clone https://github.com/radare/radare2.git
