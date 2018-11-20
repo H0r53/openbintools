@@ -12,7 +12,7 @@
 #
 """
 
-import pwn
+from pwn import *
 
 
 class ObtDisasm(object):
@@ -27,14 +27,17 @@ class ObtDisasm(object):
         self.bits = bits
         self.endian = endian
 
-    @staticmethod
-    def disasm(data):
+    def disasm(self, data):
         """
         Method ObtDisasm.disasm()
         :param data:
         :return:
         """
-        return pwn.disasm(data)
+        context.arch = self.arch
+        context.os = 'linux'
+        x = int.from_bytes(data[0x18:0x18+8], byteorder='little')
+        binary = ELF.from_bytes(data)
+        return binary.disasm(binary.entry+x, 1000)
 
     def update(self, arch='amd64', bits=64, endian='little'):
         """

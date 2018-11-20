@@ -30,10 +30,10 @@
 
 import sys
 import socket
-import pwn
 import smartsocket
 import obtmagic
 import argparse
+
 
 class OpenBinTool(object):
     """
@@ -85,11 +85,16 @@ class OpenBinTool(object):
         :param file:
         :return:
         """
-        binary = pwn.ELF(file)
-        fd = open(file, 'rb')
-        self.binary = fd.read()
-        self.text = binary.get_section_by_name('.text').data()
-        fd.close()
+        self.smartsock.send("load")
+        data = self.smartsock.recv()
+        print(data)
+        if data == b"STATUS: OK - Begin":
+            fd = open(file, 'rb')
+            self.binary = fd.read()
+            self.smartsock.send(self.binary)
+            fd.close()
+        else:
+            print("Error: Failure to load file")
 
     def quit(self):
         """
@@ -125,23 +130,19 @@ class OpenBinTool(object):
                     mt_result = magic_tool.find_magic(self.binary)
                     print(mt_result)
                 else:
-                    print("Error: no binary loaded")
+                    print("Error: Possibly no binary loaded")
             elif cmd in ["l", "load"]:
                 file = "/bin/ls"  # debugging only
                 self.load(file)
             elif cmd in ["d", "disasm"]:
-                # Check to see if binary is loaded
-                if self.text:
-                    self.smartsock.send("disasm")
+                self.smartsock.send("disasm")
+                data = self.smartsock.recv()
+                print(data)
+                if data == b"STATUS: OK - Disasm":
                     data = self.smartsock.recv()
-                    print(data)
-                    if data == b"STATUS: OK - Begin":
-                        # Binary
-                        self.smartsock.send(self.text)
-                        data = self.smartsock.recv()
-                        print(data.decode('utf-8'))
+                    print(data.decode('utf-8'))
                 else:
-                    print("Error: no binary loaded")
+                    print("Error: Possibly no binary loaded")
             else:
                 print("Command {} currently not supported".format(cmd))
                 print("Enter (h)elp for a list of commands")
