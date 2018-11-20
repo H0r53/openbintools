@@ -33,7 +33,7 @@ import socket
 import pwn
 import smartsocket
 import obtmagic
-
+import argparse
 
 class OpenBinTool(object):
     """
@@ -50,7 +50,9 @@ class OpenBinTool(object):
         # Networking data
         self.socket = None
         self.smartsock = None
-        # self.encrypt = False Used if toggling crypto
+
+        # cli argument parser
+        self.parser = None
 
     def connect(self, host, port):
         """
@@ -94,16 +96,19 @@ class OpenBinTool(object):
         Method OpenBinTool.quit()
         :return:
         """
-        if self.smartsock:
+        self.smartsock.send("quit")
+        data = self.smartsock.recv()
+        print(data)
+        if data == b"STATUS: OK - Quiting":
             self.smartsock.close()
-        print("Quiting OpenBinTool...")
-        sys.exit()
+            print("Quiting OpenBinTool...")
+            sys.exit()
+        else:
+            print("Error: Failure to quit")
 
-    def cli(self, host, port):
+    def repl(self):
         """
-        Method cli()
-        :param host:
-        :param port:
+        Method repl()
         :return:
         """
         # Process user command
@@ -113,7 +118,7 @@ class OpenBinTool(object):
             if cmd in ["q", "quit"]:
                 self.quit()
             elif cmd in ["h", "help"]:
-                self.usage()
+                self.repl_usage()
             elif cmd in ["f", "file"]:
                 if self.binary:
                     magic_tool = obtmagic.MagicTool()
@@ -124,27 +129,17 @@ class OpenBinTool(object):
             elif cmd in ["l", "load"]:
                 file = "/bin/ls"  # debugging only
                 self.load(file)
-            # Used if toggling crypto
-            # elif cmd in ["e", "encrypt"]:
-            #     self.connect(host, port)
-            #     self.encrypt = not self.encrypt
-            #     self.smartsock.send("encrypt", self.encrypt)
-            #     data = self.smartsock.recv()
-            #     print(data)
-            #     print("Encrypt =", self.encrypt)
             elif cmd in ["d", "disasm"]:
                 # Check to see if binary is loaded
                 if self.text:
-                    self.connect(host, port)
-                    self.smartsock.send("disasm")  # , self.encrypt) Used if toggling crypto
+                    self.smartsock.send("disasm")
                     data = self.smartsock.recv()
                     print(data)
                     if data == b"STATUS: OK - Begin":
                         # Binary
-                        self.smartsock.send(self.text)  # , self.encrypt) Used if toggling crypto
+                        self.smartsock.send(self.text)
                         data = self.smartsock.recv()
                         print(data.decode('utf-8'))
-                    self.smartsock.close()
                 else:
                     print("Error: no binary loaded")
             else:
@@ -152,7 +147,7 @@ class OpenBinTool(object):
                 print("Enter (h)elp for a list of commands")
 
     @staticmethod
-    def welcome():
+    def repl_welcome():
         """
         Method DocString
         :return:
@@ -161,19 +156,31 @@ class OpenBinTool(object):
         print("Enter \"h\" or \"help\" for a list of commands")
 
     @staticmethod
-    def usage():
+    def repl_usage():
         """
         Method DocString
         :return:
         """
         print("Supported Commands:")
         print("\t(l)oad FILE \tLoads the file named FILE")
-        # print("\t(e)ncrypt   \tToggle encryption of communication") Used if toggling crypto
         print("\t(a)sm FILE  \tAssembles instructions at FILE")
         print("\t(d)isasm    \tDisassembles the currently loaded file")
-        print("\t(f)ile      \tIdentify filetype of currently loaded")
+        print("\t(f)ile      \tIdentify file type of currently loaded file")
         print("\t(q)uit      \tExit program")
         print("\t(h)elp      \tDisplay this message")
+
+    def cli(self):
+        """
+        Method DocString
+        :return:
+        """
+        self.parser = argparse.ArgumentParser(description="Command Line Interface for OpenBinTools", epilog="Now Hack All The Things!")
+        self.parser.add_argument('-f', '--file', action='store_true', help='Identify file type of currently loaded file')
+        self.parser.add_argument('-s', '--strings', metavar="TOLERANCE", dest="strtolerance", nargs='?', const=3, default=3, help="Custom strings utility")
+
+        required = self.parser.add_argument_group('required arguments')
+        required.add_argument('-l', '--load', metavar="FILE", nargs=1, required=True , help="Specify file to load.")
+        args = self.parser.parse_args()
 
 
 def main():
@@ -186,11 +193,19 @@ def main():
     port = 11337
     tool = OpenBinTool()
 
-    # Welcome message
-    tool.welcome()
+    tool.connect(host, port)
 
-    # Command Line Interface
-    tool.cli(host, port)
+    # If no command line arguments are provided enter cli
+    if len(sys.argv) == 1:
+        # Welcome message
+        tool.repl_welcome()
+
+        # REPL menu interface
+        tool.repl()
+
+    # Else execute provided arguments and exit
+    else:
+        tool.cli()
 
 
 if __name__ == "__main__":

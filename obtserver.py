@@ -39,8 +39,6 @@ BUFF = 1024
 HOST = '127.0.0.1'
 PORT = 11337
 
-# ENCRYPT = False Used if toggling crypto
-
 
 def handler(client, addr):
     """
@@ -49,7 +47,6 @@ def handler(client, addr):
     :param addr:
     :return:
     """
-    # global ENCRYPT Used if toggling crypto
     smartsock = smartsocket.SmartSocket(client)
     disassembler = obtdisasm.ObtDisasm()
     try:
@@ -60,30 +57,33 @@ def handler(client, addr):
         key = (aa ** smartsock.secret) % smartsock.sharedPrime
         smartsock.key = bytes(str(key), 'utf-8')
 
-        data = smartsock.recv()
-        if not data:
-            raise Exception("No data")
-        print("Data received from {}: {}".format(repr(addr), data))
+        while 1:
+            data = smartsock.recv()
+            if not data:
+                raise Exception("No data")
 
-        # Match request
-        if data == b"asm":
-            smartsock.send("STATUS: OK - Begin")  # , ENCRYPT) Used if toggling crypto
-            data = smartsock.recv()
-            senddata = pwn.asm(data)
-            smartsock.send(senddata)  # , ENCRYPT) Used if toggling crypto
-        elif data == b"disasm":
-            smartsock.send("STATUS: OK - Begin")  # , ENCRYPT) Used if toggling crypto
-            data = smartsock.recv()
-            senddata = disassembler.disasm(data)
-            print(senddata)
-            smartsock.send(senddata)  # , ENCRYPT) Used if toggling crypto
-        # Used if toggling crypto
-        # elif data == b"encrypt":
-        #     ENCRYPT = not ENCRYPT
-        #     smartsock.send("STATUS: OK - Begin", ENCRYPT)
-        else:
-            smartsock.send("STATUS: ERROR\n")
-            smartsock.send(list_commands())
+            print("Data received from {}: {}".format(repr(addr), data))
+
+            # Match request
+            if data == b"asm":
+                smartsock.send("STATUS: OK - Begin")
+                data = smartsock.recv()
+                senddata = pwn.asm(data)
+                smartsock.send(senddata)
+            elif data == b"disasm":
+                smartsock.send("STATUS: OK - Begin")
+                data = smartsock.recv()
+                senddata = disassembler.disasm(data)
+                print(senddata)
+                smartsock.send(senddata)
+            elif data == b"quit":
+                smartsock.send("STATUS: OK - Quiting")
+                smartsock.close()
+                print("Connection to {} closed".format(repr(addr)))
+                break
+            else:
+                smartsock.send("STATUS: ERROR\n")
+                smartsock.send(list_commands())
 
     except Exception as exp:
         # Exception is to broad

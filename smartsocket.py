@@ -40,10 +40,10 @@ class SmartSocket(object):
         self.sharedPrime = 23
         self.sharedBase = 5
         self.secret = random.SystemRandom().getrandbits(20)
-        self.key = b'arbitrarily long key'      # Need to implement key exchange
+        self.key = b'arbitrarily long key'
         self.mode = Blowfish.MODE_CBC           # Do we want CBC??
 
-    def send(self, data):  # , encrypt=False): used if toggling crypto
+    def send(self, data):
         """
         Method SmartSocket.send()
 
@@ -60,13 +60,6 @@ class SmartSocket(object):
         """
         if not isinstance(data, bytes):
             data = bytes(data, 'utf-8')
-
-        # Used if toggling crypto
-        # if encrypt:
-        #     data = b'1' + self.encrypt(data)
-        # else:
-        #     data = b'0' + data
-
         ciphertext = self.encrypt(data)
         self.socket.sendall(struct.pack('!I', len(ciphertext)))
         self.socket.sendall(ciphertext)
@@ -84,12 +77,12 @@ class SmartSocket(object):
 
         :return:
         """
-        lengthbuf = self.recvall(4)  # , getlen=True) Used if toggling crypto
+        lengthbuf = self.recvall(4)
         length, = struct.unpack('!I', lengthbuf)
         ciphertext = self.recvall(length)
         return self.decrypt(ciphertext)
 
-    def recvall(self, count):  # , getlen=False): Used if toggling crypto
+    def recvall(self, count):
         """
         Method SmartSock.recvall()
         :param count:
@@ -102,14 +95,6 @@ class SmartSocket(object):
                 return None
             retval += recbuffer
             count -= len(recbuffer)
-
-        # Used if toggling crypto
-        # if getlen:
-        #     return retval  # no extra byte was sent
-        # elif retval[0] == 49:  # encrypt == True == 1 --> ord(1) == 49
-        #     return self.decrypt(retval[1:])
-        # return retval[1:]  # encryption isn't being used
-
         return retval
 
     def encrypt(self, plaintext):
