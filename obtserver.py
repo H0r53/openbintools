@@ -57,6 +57,8 @@ def handler(client, addr):
         key = (aa ** smartsock.secret) % smartsock.sharedPrime
         smartsock.key = bytes(str(key), 'utf-8')
 
+        binary = None
+
         while 1:
             data = smartsock.recv()
             if not data:
@@ -71,11 +73,14 @@ def handler(client, addr):
                 senddata = pwn.asm(data)
                 smartsock.send(senddata)
             elif data == b"disasm":
-                smartsock.send("STATUS: OK - Begin")
-                data = smartsock.recv()
-                senddata = disassembler.disasm(data)
+                smartsock.send("STATUS: OK - Disasm")
+                senddata = disassembler.disasm(binary)
                 print(senddata)
                 smartsock.send(senddata)
+            elif data == b"load":
+                smartsock.send("STATUS: OK - Begin")
+                data = smartsock.recv()
+                binary = data
             elif data == b"quit":
                 smartsock.send("STATUS: OK - Quiting")
                 smartsock.close()
