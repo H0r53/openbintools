@@ -36,7 +36,7 @@ class MagicTool(object):
                 if file.offset + i > len(sourcebytes):
                     found = False
                     break
-                if file.magic[i] != ord(sourcebytes[file.offset + i]):
+                if file.magic[i] != sourcebytes[file.offset + i]:
                     found = False
                     break
             if found:

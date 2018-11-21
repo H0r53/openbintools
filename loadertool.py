@@ -17,7 +17,7 @@ class LoaderTool(object):
         with open(filename,'rb') as binary:
             data = binary.read(4)
             for i in range(0,4):
-                if elfmagic[i] != ord(data[i]):
+                if elfmagic[i] != data[i]:
                     return False
         return True
 
@@ -26,7 +26,7 @@ class LoaderTool(object):
         with open(filename,'rb') as binary:
             data = binary.read(2)
             for i in range(0,2):
-                if pemagic[i] != ord(data[i]):
+                if pemagic[i] != data[i]:
                     return False
         return True
 
