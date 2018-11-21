@@ -21,9 +21,9 @@ def strings(byte_array, tolerance=3):
     strlist = {}
     mstr = ''
     for i in byte_array:
-        if i in alpha:
-            mstr += i
-        elif i == '\x00':
+        if chr(i) in alpha:
+            mstr += chr(i)
+        elif i == 0x0:
             mstr = mstr.strip()
             if len(mstr) >= tolerance:
                 if mstr in strlist:
@@ -32,6 +32,5 @@ def strings(byte_array, tolerance=3):
                     strlist[mstr] = 1
             mstr = ''
 
-    #iteritems is no longer supported in py3
     for k,v in strlist.items():
         print("[{}] {}".format(v,k))
