@@ -10,7 +10,9 @@
 
 from string import printable, whitespace
 
+
 def strings(byte_array, tolerance=3):
+    print("here")
     alpha = list(printable)
     for w in whitespace:
         if w not in ['\t',' ']:
@@ -30,5 +32,6 @@ def strings(byte_array, tolerance=3):
                     strlist[mstr] = 1
             mstr = ''
 
-    for k,v in strlist.iteritems():
+    #iteritems is no longer supported in py3
+    for k,v in strlist.items():
         print("[{}] {}".format(v,k))
