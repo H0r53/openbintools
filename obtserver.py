@@ -32,6 +32,8 @@
 import socket
 import pwn
 import _thread
+import os
+import random
 import smartsocket
 import obtdisasm
 
@@ -57,7 +59,8 @@ def handler(client, addr):
         key = (aa ** smartsock.secret) % smartsock.sharedPrime
         smartsock.key = bytes(str(key), 'utf-8')
 
-        binary = None
+        file_mem = None
+        file_disk = [None, None]
 
         while 1:
             data = smartsock.recv()
@@ -74,17 +77,28 @@ def handler(client, addr):
                 smartsock.send(senddata)
             elif data == b"disasm":
                 smartsock.send("STATUS: OK - Disasm")
-                senddata = disassembler.disasm(binary)
+                senddata = disassembler.disasm(file_mem)
                 print(senddata)
                 smartsock.send(senddata)
             elif data == b"load":
+                if None in file_disk:
+                    # Create unique tmp file: /tmp/openbintools/RemoteIP_RemotePORT_FD#_Random#
+                    rand = random.SystemRandom().getrandbits(100)
+                    file_disk[0] = "/tmp/openbintools/"+addr[0]+"_"+str(addr[1])+"_fd"+str(smartsock.socket.fileno())+"_"+str(rand)
+                    file_disk[1] = open(file_disk[0], 'wb+')
                 smartsock.send("STATUS: OK - Begin")
                 data = smartsock.recv()
-                binary = data
+                file_mem = data
+                file_disk[1].write(file_mem)
             elif data == b"quit":
                 smartsock.send("STATUS: OK - Quiting")
                 smartsock.close()
                 print("Connection to {} closed".format(repr(addr)))
+                file_disk[1].close()
+                try:
+                    os.remove(file_disk[0])
+                except OSError as error:
+                    print("Error: {} - {}.".format(error.filename, error.strerror))
                 break
             else:
                 smartsock.send("STATUS: ERROR\n")

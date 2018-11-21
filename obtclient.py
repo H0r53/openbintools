@@ -33,6 +33,7 @@ import socket
 import smartsocket
 import obtmagic
 import argparse
+import stringtool
 
 
 class OpenBinTool(object):
@@ -111,6 +112,9 @@ class OpenBinTool(object):
         else:
             print("Error: Failure to quit")
 
+    def strings(self, tolerance=3):
+        stringtool.strings(self.binary, tolerance)
+
     def repl(self):
         """
         Method repl()
@@ -119,22 +123,8 @@ class OpenBinTool(object):
         # Process user command
         cmd = None
         while True:
-            cmd = input("> ")
-            if cmd in ["q", "quit"]:
-                self.quit()
-            elif cmd in ["h", "help"]:
-                self.repl_usage()
-            elif cmd in ["f", "file"]:
-                if self.binary:
-                    magic_tool = obtmagic.MagicTool()
-                    mt_result = magic_tool.find_magic(self.binary)
-                    print(mt_result)
-                else:
-                    print("Error: Possibly no binary loaded")
-            elif cmd in ["l", "load"]:
-                file = "/bin/ls"  # debugging only
-                self.load(file)
-            elif cmd in ["d", "disasm"]:
+            cmd = input("> ").split()
+            if cmd[0] in ["d", "disasm"]:
                 self.smartsock.send("disasm")
                 data = self.smartsock.recv()
                 print(data)
@@ -143,6 +133,30 @@ class OpenBinTool(object):
                     print(data.decode('utf-8'))
                 else:
                     print("Error: Possibly no binary loaded")
+            elif cmd[0] in ["f", "file"]:
+                if self.binary:
+                    #print(self.binary)
+                    self.binary = open('/bin/ls','rb').read()
+                    magic_tool = obtmagic.MagicTool()
+                    mt_result = magic_tool.find_magic(self.binary)
+                    print(mt_result)
+                else:
+                    print("Error: Possibly no binary loaded")
+            elif cmd[0] in ["h", "help"]:
+                self.repl_usage()
+
+            elif cmd[0] in ["l", "load"]:
+                if len(cmd) == 2:
+                    self.load(cmd[1])
+                else:
+                    print("Error: Missing FILE to load")
+            elif cmd[0] in ["q", "quit"]:
+                self.quit()
+            elif cmd[0] in ["s", "strings"]:
+                if len(cmd) == 2:
+                    self.strings(int(cmd[1]))
+                else:
+                    self.strings()
             else:
                 print("Command {} currently not supported".format(cmd))
                 print("Enter (h)elp for a list of commands")
@@ -163,12 +177,13 @@ class OpenBinTool(object):
         :return:
         """
         print("Supported Commands:")
-        print("\t(l)oad FILE \tLoads the file named FILE")
         print("\t(a)sm FILE  \tAssembles instructions at FILE")
         print("\t(d)isasm    \tDisassembles the currently loaded file")
         print("\t(f)ile      \tIdentify file type of currently loaded file")
-        print("\t(q)uit      \tExit program")
         print("\t(h)elp      \tDisplay this message")
+        print("\t(l)oad FILE \tLoads the file named FILE")
+        print("\t(s)trings TOL\tDisplays ASCII printable strings with tolerance TOL")
+        print("\t(q)uit      \tExit program")
 
     def cli(self):
         """
@@ -176,6 +191,7 @@ class OpenBinTool(object):
         :return:
         """
         self.parser = argparse.ArgumentParser(description="Command Line Interface for OpenBinTools", epilog="Now Hack All The Things!")
+        self.parser.add_argument('-d', '--disasm', help="Display disassemble of the loaded file")
         self.parser.add_argument('-f', '--file', action='store_true', help='Identify file type of currently loaded file')
         self.parser.add_argument('-s', '--strings', metavar="TOLERANCE", dest="strtolerance", nargs='?', const=3, default=3, help="Custom strings utility")
 

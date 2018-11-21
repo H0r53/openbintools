@@ -10,7 +10,9 @@
 
 from string import printable, whitespace
 
+
 def strings(byte_array, tolerance=3):
+    print("here")
     alpha = list(printable)
     for w in whitespace:
         if w not in ['\t',' ']:
