@@ -36,6 +36,7 @@ import os
 import random
 import smartsocket
 import obtdisasm
+import r2tool
 
 BUFF = 1024
 HOST = '127.0.0.1'
@@ -90,16 +91,42 @@ def handler(client, addr):
                 data = smartsock.recv()
                 file_mem = data
                 file_disk[1].write(file_mem)
+            elif data == b"radare2":
+                smartsock.send("STATUS: OK - Send cmd")
+                cmd = smartsock.recv()
+                if cmd == b"-i":
+                    result = r2tool.imports(file_disk[0])
+                    smartsock.send(result)
+                elif cmd == b"-m":
+                    result = r2tool.mainaddr(file_disk[0])
+                    smartsock.send(result)
+                elif cmd == b"-s":
+                    result = r2tool.secuity(file_disk[0])
+                    smartsock.send(result)
+                elif cmd == b"-ss":
+                    result = r2tool.sections(file_disk[0])
+                    smartsock.send(result)
+                elif cmd == b"-l":
+                    result = r2tool.linkedlibs(file_disk[0])
+                    smartsock.send(result)
+                elif cmd == b"-f":
+                    result = r2tool.functions(file_disk[0])
+                    smartsock.send(result)
+                elif cmd == b"-p":
+                    smartsock.send("STATUS: OK - Send r2pipe cmd")
+                    cmd = smartsock.recv()
+                    result = r2tool.pipe(str(cmd), file_disk[0])
+                    smartsock.send(result)
             elif data == b"quit":
                 smartsock.send("STATUS: OK - Quiting")
                 smartsock.close()
                 print("Connection to {} closed".format(repr(addr)))
-                if file_disk[1].open:
-                    file_disk[1].close()
                 try:
-                    os.remove(file_disk[0])
-                except OSError as error:
-                    print("Error: {} - {}.".format(error.filename, error.strerror))
+                    if file_disk[0] is not None:
+                        file_disk[1].close()
+                        os.remove(file_disk[0])
+                except:
+                    print("Error: Problem closing/removing tmp file")
                 break
             else:
                 smartsock.send("STATUS: ERROR\n")

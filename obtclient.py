@@ -104,7 +104,6 @@ class OpenBinTool(object):
         """
         self.smartsock.send("quit")
         data = self.smartsock.recv()
-        print(data)
         if data == b"STATUS: OK - Quiting":
             self.smartsock.close()
             print("Quiting OpenBinTool...")
@@ -113,7 +112,17 @@ class OpenBinTool(object):
             print("Error: Failure to quit")
 
     def r2(self, option):
-        return
+        self.smartsock.send("radare2")
+        data = self.smartsock.recv()
+        if data == b"STATUS: OK - Send cmd":
+            self.smartsock.send(option[0])
+            result = self.smartsock.recv()
+            if result == b"STATUS: OK - Send r2pipe cmd":
+                self.smartsock.send(option[1])
+                result = self.smartsock.recv()
+            print(result.decode("utf-8"))
+        else:
+            print("Error: Possibly no binary loaded")
 
     def strings(self, tolerance=3):
         stringtool.strings(self.binary, tolerance)
@@ -130,7 +139,6 @@ class OpenBinTool(object):
             if cmd[0] in ["d", "disasm"]:
                 self.smartsock.send("disasm")
                 data = self.smartsock.recv()
-                print(data)
                 if data == b"STATUS: OK - Disasm":
                     data = self.smartsock.recv()
                     print(data.decode('utf-8'))
@@ -147,7 +155,6 @@ class OpenBinTool(object):
                     print("Error: Possibly no binary loaded")
             elif cmd[0] in ["h", "help"]:
                 self.repl_usage()
-
             elif cmd[0] in ["l", "load"]:
                 if len(cmd) == 2:
                     self.load(cmd[1])
@@ -156,8 +163,9 @@ class OpenBinTool(object):
             elif cmd[0] in ["q", "quit"]:
                 self.quit()
             elif cmd[0] in ["r", "radare2"]:
-                if len(cmd) == 2:
-                    self.r2(cmd[1])
+                if len(cmd) >= 2:
+                    options = cmd[1:]
+                    self.r2(options)
                 else:
                     print("Error: Must supply option when using radare2 flag")
             elif cmd[0] in ["s", "strings"]:
