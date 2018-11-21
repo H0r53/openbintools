@@ -112,6 +112,9 @@ class OpenBinTool(object):
         else:
             print("Error: Failure to quit")
 
+    def r2(self, option):
+        return
+
     def strings(self, tolerance=3):
         stringtool.strings(self.binary, tolerance)
 
@@ -152,6 +155,11 @@ class OpenBinTool(object):
                     print("Error: Missing FILE to load")
             elif cmd[0] in ["q", "quit"]:
                 self.quit()
+            elif cmd[0] in ["r", "radare2"]:
+                if len(cmd) == 2:
+                    self.r2(cmd[1])
+                else:
+                    print("Error: Must supply option when using radare2 flag")
             elif cmd[0] in ["s", "strings"]:
                 if len(cmd) == 2:
                     self.strings(int(cmd[1]))
@@ -182,6 +190,7 @@ class OpenBinTool(object):
         print("\t(f)ile      \tIdentify file type of currently loaded file")
         print("\t(h)elp      \tDisplay this message")
         print("\t(l)oad FILE \tLoads the file named FILE")
+        print("\t(r)adare2 OPT\tInteract with radare2 using option OPT")
         print("\t(s)trings TOL\tDisplays ASCII printable strings with tolerance TOL")
         print("\t(q)uit      \tExit program")
 
@@ -193,6 +202,7 @@ class OpenBinTool(object):
         self.parser = argparse.ArgumentParser(description="Command Line Interface for OpenBinTools", epilog="Now Hack All The Things!")
         self.parser.add_argument('-d', '--disasm', help="Display disassemble of the loaded file")
         self.parser.add_argument('-f', '--file', action='store_true', help='Identify file type of currently loaded file')
+        self.parser.add_argument('-r2', '--radare2', choices=["-f", "-i", "-ll", "-m", "-p", "-s", "-ss"])
         self.parser.add_argument('-s', '--strings', metavar="TOLERANCE", dest="strtolerance", nargs='?', const=3, default=3, help="Custom strings utility")
 
         required = self.parser.add_argument_group('required arguments')

@@ -94,7 +94,8 @@ def handler(client, addr):
                 smartsock.send("STATUS: OK - Quiting")
                 smartsock.close()
                 print("Connection to {} closed".format(repr(addr)))
-                file_disk[1].close()
+                if file_disk[1].open:
+                    file_disk[1].close()
                 try:
                     os.remove(file_disk[0])
                 except OSError as error:
