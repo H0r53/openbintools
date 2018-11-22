@@ -2,7 +2,7 @@
 
 """
 # Authors:      Jacob Mills, Brandon Everhart
-# Date:         09/17/2018
+# Date:         11/22/2018
 #
 # Description:  A network-based x86_64 (dis)/assembler API for Python
 #
@@ -28,15 +28,18 @@
 #
 """
 
+# Standard Module Imports
 import sys
 import socket
-import smartsocket
-import obtmagic
 import argparse
+
+# Project File Imports
+import obtmagic
+import smartsocket
 import stringtool
 
 
-class OpenBinTool(object):
+class OpenBinTool:
     """
     Class DocString
     """
@@ -55,6 +58,17 @@ class OpenBinTool(object):
         # cli argument parser
         self.parser = None
 
+    def asm(self):
+        """
+
+        :return:
+        """
+        self.smartsock.send("asm")
+        data = self.smartsock.recv()
+        if data == b"STATUS: OK - Asm":
+            data = self.smartsock.recv()
+            print("\nASM:\n\t"+data.decode('utf-8'))
+
     def connect(self, host, port):
         """
         Method DocString
@@ -66,6 +80,100 @@ class OpenBinTool(object):
         self.socket.connect((host, port))
         self.smartsock = smartsocket.SmartSocket(self.socket)
         self.smartsock.key = self.keyexchange()
+
+    def cli(self):
+        """
+        Method DocString
+        :return:
+        """
+        self.parser = argparse.ArgumentParser(
+            description="Command Line Interface for OpenBinTools",
+            epilog="Now Hack All The Things!"
+        )
+        self.parser.add_argument(
+            '-a',
+            '--asm',
+            action='store_true',
+            help="Return assemble of the loaded file"
+        )
+        self.parser.add_argument(
+            '-d',
+            '--disasm',
+            action='store_true',
+            help="Display disassemble of the loaded file"
+        )
+        self.parser.add_argument(
+            '-f',
+            '--file',
+            action='store_true',
+            help='Identify file type of currently loaded file'
+        )
+        self.parser.add_argument(
+            '-r',
+            '--radare2',
+            choices=["-f", "-i", "-ll", "-m", "-p", "-s", "-ss"]
+        )
+        self.parser.add_argument(
+            '-s',
+            '--strings',
+            metavar="TOLERANCE",
+            dest="strtolerance",
+            nargs='?',
+            const=3,
+            default=None,
+            help="Strings utility"
+        )
+        required = self.parser.add_argument_group('required arguments')
+        required.add_argument(
+            '-l',
+            '--load',
+            metavar="FILE",
+            nargs=1,
+            required=True,
+            help="Specify file to load."
+        )
+        args = self.parser.parse_args()
+
+        # Load file is mandatory so no need for "if" statement
+        self.load(["-l", args.load[0]])
+        if args.asm:
+            self.asm()
+        if args.disasm:
+            self.disasm()
+        if args.file:
+            self.file()
+        if args.radare2:
+            self.r2(["-r", args.radare2])
+        if args.strtolerance:
+            self.strings(["-s", args.strtolerance])
+
+        self.quit()
+
+    def disasm(self):
+        """
+
+        :return:
+        """
+        self.smartsock.send("disasm")
+        data = self.smartsock.recv()
+        if data == b"STATUS: OK - Disasm":
+            data = self.smartsock.recv()
+            print("\nDISASM:\n\t"+data.decode('utf-8'))
+        else:
+            print("\nDISASM:\n\tError: Possibly no binary loaded")
+
+    def file(self):
+        """
+
+        :return:
+        """
+        if self.binary:
+            self.binary = open('/bin/ls', 'rb').read()
+            magic_tool = obtmagic.MagicTool()
+            mt_result = magic_tool.find_magic(self.binary)
+            print("\nFILE:\n\t"+mt_result)
+        else:
+            print("\nFILE:\n\tError: Possibly no binary loaded")
 
     def keyexchange(self):
         """
@@ -80,22 +188,24 @@ class OpenBinTool(object):
         key = bytes(str(key), 'utf-8')
         return key
 
-    def load(self, file):
+    def load(self, cmd):
         """
         Method OpenBinTool.load()
-        :param file:
+        :param cmd:
         :return:
         """
-        self.smartsock.send("load")
-        data = self.smartsock.recv()
-        print(data)
-        if data == b"STATUS: OK - Begin":
-            fd = open(file, 'rb')
-            self.binary = fd.read()
-            self.smartsock.send(self.binary)
-            fd.close()
+        if len(cmd) == 2:
+            self.smartsock.send("load")
+            data = self.smartsock.recv()
+            if data == b"STATUS: OK - Begin":
+                fd = open(cmd[1], 'rb')
+                self.binary = fd.read()
+                self.smartsock.send(self.binary)
+                fd.close()
+            else:
+                print("\nLOAD:\n\tError: Failure to load file")
         else:
-            print("Error: Failure to load file")
+            print("\nLOAD:\n\tError: Missing FILE to load")
 
     def quit(self):
         """
@@ -106,26 +216,32 @@ class OpenBinTool(object):
         data = self.smartsock.recv()
         if data == b"STATUS: OK - Quiting":
             self.smartsock.close()
-            print("Quiting OpenBinTool...")
+            print("\nQUIT:\n\tSuccess")
             sys.exit()
         else:
-            print("Error: Failure to quit")
+            print("\nQUIT:\n\tError: Failure to quit")
 
-    def r2(self, option):
-        self.smartsock.send("radare2")
-        data = self.smartsock.recv()
-        if data == b"STATUS: OK - Send cmd":
-            self.smartsock.send(option[0])
-            result = self.smartsock.recv()
-            if result == b"STATUS: OK - Send r2pipe cmd":
-                self.smartsock.send(option[1])
+    def r2(self, cmd):
+        """
+
+        :param cmd:
+        :return:
+        """
+        if len(cmd) >= 2:
+            options = cmd[1:]
+            self.smartsock.send("radare2")
+            data = self.smartsock.recv()
+            if data == b"STATUS: OK - Send cmd":
+                self.smartsock.send(options[0])
                 result = self.smartsock.recv()
-            print(result.decode("utf-8"))
+                if result == b"STATUS: OK - Send r2pipe cmd":
+                    self.smartsock.send(options[1])
+                    result = self.smartsock.recv()
+                print("\nR2:\n\t"+result.decode("utf-8"))
+            else:
+                print("\nR2:\n\tError: Possibly no binary loaded")
         else:
-            print("Error: Possibly no binary loaded")
-
-    def strings(self, tolerance=3):
-        stringtool.strings(self.binary, tolerance)
+            print("\nR2:\n\tError: Must supply option when using radare2 flag")
 
     def repl(self):
         """
@@ -136,43 +252,22 @@ class OpenBinTool(object):
         cmd = None
         while True:
             cmd = input("> ").split()
-            if cmd[0] in ["d", "disasm"]:
-                self.smartsock.send("disasm")
-                data = self.smartsock.recv()
-                if data == b"STATUS: OK - Disasm":
-                    data = self.smartsock.recv()
-                    print(data.decode('utf-8'))
-                else:
-                    print("Error: Possibly no binary loaded")
+            if cmd[0] in ["a", "asm"]:
+                self.asm()
+            elif cmd[0] in ["d", "disasm"]:
+                self.disasm()
             elif cmd[0] in ["f", "file"]:
-                if self.binary:
-                    #print(self.binary)
-                    self.binary = open('/bin/ls','rb').read()
-                    magic_tool = obtmagic.MagicTool()
-                    mt_result = magic_tool.find_magic(self.binary)
-                    print(mt_result)
-                else:
-                    print("Error: Possibly no binary loaded")
+                self.file()
             elif cmd[0] in ["h", "help"]:
                 self.repl_usage()
             elif cmd[0] in ["l", "load"]:
-                if len(cmd) == 2:
-                    self.load(cmd[1])
-                else:
-                    print("Error: Missing FILE to load")
+                self.load(cmd)
             elif cmd[0] in ["q", "quit"]:
                 self.quit()
             elif cmd[0] in ["r", "radare2"]:
-                if len(cmd) >= 2:
-                    options = cmd[1:]
-                    self.r2(options)
-                else:
-                    print("Error: Must supply option when using radare2 flag")
+                self.r2(cmd)
             elif cmd[0] in ["s", "strings"]:
-                if len(cmd) == 2:
-                    self.strings(int(cmd[1]))
-                else:
-                    self.strings()
+                self.strings(cmd)
             else:
                 print("Command {} currently not supported".format(cmd))
                 print("Enter (h)elp for a list of commands")
@@ -202,20 +297,16 @@ class OpenBinTool(object):
         print("\t(s)trings TOL\tDisplays ASCII printable strings with tolerance TOL")
         print("\t(q)uit      \tExit program")
 
-    def cli(self):
+    def strings(self, cmd):
         """
-        Method DocString
+
+        :param cmd:
         :return:
         """
-        self.parser = argparse.ArgumentParser(description="Command Line Interface for OpenBinTools", epilog="Now Hack All The Things!")
-        self.parser.add_argument('-d', '--disasm', help="Display disassemble of the loaded file")
-        self.parser.add_argument('-f', '--file', action='store_true', help='Identify file type of currently loaded file')
-        self.parser.add_argument('-r2', '--radare2', choices=["-f", "-i", "-ll", "-m", "-p", "-s", "-ss"])
-        self.parser.add_argument('-s', '--strings', metavar="TOLERANCE", dest="strtolerance", nargs='?', const=3, default=3, help="Custom strings utility")
-
-        required = self.parser.add_argument_group('required arguments')
-        required.add_argument('-l', '--load', metavar="FILE", nargs=1, required=True , help="Specify file to load.")
-        args = self.parser.parse_args()
+        if len(cmd) == 2:
+            stringtool.strings(self.binary, cmd[1])
+        else:
+            stringtool.strings(self.binary)
 
 
 def main():

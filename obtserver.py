@@ -82,10 +82,15 @@ def handler(client, addr):
                 print(senddata)
                 smartsock.send(senddata)
             elif data == b"load":
+                # Check if a file has been loaded to disk
                 if None in file_disk:
+                    # Check if a file has
+                    dir = "/tmp/openbintools/"
+                    if not os.path.exists(dir):
+                        os.makedirs(dir)
                     # Create unique tmp file: /tmp/openbintools/RemoteIP_RemotePORT_FD#_Random#
                     rand = random.SystemRandom().getrandbits(100)
-                    file_disk[0] = "/tmp/openbintools/"+addr[0]+"_"+str(addr[1])+"_fd"+str(smartsock.socket.fileno())+"_"+str(rand)
+                    file_disk[0] = dir+addr[0]+"_"+str(addr[1])+"_fd"+str(smartsock.socket.fileno())+"_"+str(rand)
                     file_disk[1] = open(file_disk[0], 'wb+')
                 smartsock.send("STATUS: OK - Begin")
                 data = smartsock.recv()
