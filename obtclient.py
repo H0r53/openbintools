@@ -37,6 +37,7 @@ import argparse
 import obtmagic
 import smartsocket
 import stringtool
+import loadertool
 
 
 class OpenBinTool:
@@ -49,6 +50,7 @@ class OpenBinTool:
         """
         # These data should eventually be replaced by a class containing binary data and segments
         self.binary = None
+        self.binary_path = None
         self.text = None
 
         # Networking data
@@ -109,6 +111,12 @@ class OpenBinTool:
             help='Identify file type of currently loaded file'
         )
         self.parser.add_argument(
+            '-i',
+            '--info',
+            action='store_true',
+            help="Print parsed binary info"
+        )
+        self.parser.add_argument(
             '-r',
             '--radare2',
             choices=["-f", "-i", "-ll", "-m", "-p", "-s", "-ss"]
@@ -142,11 +150,12 @@ class OpenBinTool:
             self.disasm()
         if args.file:
             self.file()
+        if args.info:
+            self.info()
         if args.radare2:
             self.r2(["-r", args.radare2])
         if args.strtolerance:
             self.strings(["-s", args.strtolerance])
-
         self.quit()
 
     def disasm(self):
@@ -168,12 +177,22 @@ class OpenBinTool:
         :return:
         """
         if self.binary:
-            self.binary = open('/bin/ls', 'rb').read()
             magic_tool = obtmagic.MagicTool()
             mt_result = magic_tool.find_magic(self.binary)
             print("\nFILE:\n\t"+mt_result)
         else:
             print("\nFILE:\n\tError: Possibly no binary loaded")
+
+    def info(self):
+        """
+
+        :return:
+        """
+        if self.binary_path:
+            print("\nINFO:")
+            loadertool.LoaderTool(self.binary_path)
+        else:
+            print("\nINFO:\n\tError: Possibly no binary loaded")
 
     def keyexchange(self):
         """
@@ -198,7 +217,8 @@ class OpenBinTool:
             self.smartsock.send("load")
             data = self.smartsock.recv()
             if data == b"STATUS: OK - Begin":
-                fd = open(cmd[1], 'rb')
+                self.binary_path = cmd[1]
+                fd = open(self.binary_path, 'rb')
                 self.binary = fd.read()
                 self.smartsock.send(self.binary)
                 fd.close()
@@ -260,6 +280,8 @@ class OpenBinTool:
                 self.file()
             elif cmd[0] in ["h", "help"]:
                 self.repl_usage()
+            elif cmd[0] in ["i", "info"]:
+                self.info()
             elif cmd[0] in ["l", "load"]:
                 self.load(cmd)
             elif cmd[0] in ["q", "quit"]:
@@ -292,6 +314,7 @@ class OpenBinTool:
         print("\t(d)isasm    \tDisassembles the currently loaded file")
         print("\t(f)ile      \tIdentify file type of currently loaded file")
         print("\t(h)elp      \tDisplay this message")
+        print("\t(i)nfo      \tPrint parsed binary info")
         print("\t(l)oad FILE \tLoads the file named FILE")
         print("\t(r)adare2 OPT\tInteract with radare2 using option OPT")
         print("\t(s)trings TOL\tDisplays ASCII printable strings with tolerance TOL")
