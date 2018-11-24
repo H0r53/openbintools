@@ -19,4 +19,6 @@ echo "Cloning radare2"
 git clone https://github.com/radare/radare2.git
 echo "Installing radare2"
 ./radare2/sys/install.sh
+echo "Installing r2pipe"
+pip3 install r2pipe
 echo "Installing complete!"
