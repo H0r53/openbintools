@@ -94,25 +94,25 @@ class ELFClass(object):
 
 
     def debug(self):
-        print("""\tMagic:\t\t\t{}
-\tClass:\t\t\t{}
-\tByteorder:\t\t{}
-\tHeaderVersion:\t\t{}
-\tOSABI:\t\t\t{}
-\tABIversion:\t\t{}
-\tfiletype:\t\t{}
-\tarchtype:\t\t{}
-\tFileVersion:\t\t{}
-\tEntry:\t\t\t{}
-\tProgramHeader:\t\t{}
-\tSectionHeader:\t\t{}
-\tFlags:\t\t\t{}
-\tHeaderSize:\t\t{}
-\tProgramHeaderEntrySize:\t{}
-\tProgramHeaderEntries:\t{}
-\tSectionHeaderEntrySize:\t{}
-\tSectionHeaderEntries:\t{}
-\tStringSectionIndex:\t{}
+        print("""Magic:\t\t\t{}
+Class:\t\t\t{}
+Byteorder:\t\t{}
+HeaderVersion:\t\t{}
+OSABI:\t\t\t{}
+ABIversion:\t\t{}
+filetype:\t\t{}
+archtype:\t\t{}
+FileVersion:\t\t{}
+Entry:\t\t\t{}
+ProgramHeader:\t\t{}
+SectionHeader:\t\t{}
+Flags:\t\t\t{}
+HeaderSize:\t\t{}
+ProgramHeaderEntrySize:\t{}
+ProgramHeaderEntries:\t{}
+SectionHeaderEntrySize:\t{}
+SectionHeaderEntries:\t{}
+StringSectionIndex:\t{}
         """.format(
             "ELF",
             "32 bit" if self._class == 1 else "64 bit",
@@ -230,31 +230,31 @@ class PEClass(object):
             self._pe_characteristics = struct.unpack('<H', binary.read(2))[0]
 
     def debug(self):
-        print("""\tMZ Signature:\t\t{}
-\tMZ LastPageExtraBytes:\t{}
-\tMZ NPages:\t\t{}
-\tMZ NRelocs:\t\t{}
-\tMZ HeaderSize:\t\t{}
-\tMZ MinAlloc:\t\t{}
-\tMZ MaxAlloc:\t\t{}
-\tMZ Initial SS:\t\t{}
-\tMZ Initial SP:\t\t{}
-\tMZ Checksum:\t\t{}
-\tMZ Initial IP:\t\t{}
-\tMZ Initial CS:\t\t{}
-\tMZ RelocPosition:\t{}
-\tMZ NOverlay:\t\t{}
-\tMZ OEM ID:\t\t{}
-\tMZ OEM INFO:\t\t{}
-\tMZ PE offset:\t\t{}
-\tPE Signature:\t\t{}
-\tPE Machine:\t\t{}
-\tPE NumSections:\t\t{}
-\tPE TimeDateStamp:\t{}
-\tPE Symbol Table:\t{}
-\tPE Symbol Count:\t{}
-\tPE Optional Table Size:\t{}
-\tPE Characteristics:\t{}
+        print("""MZ Signature:\t\t{}
+MZ LastPageExtraBytes:\t{}
+MZ NPages:\t\t{}
+MZ NRelocs:\t\t{}
+MZ HeaderSize:\t\t{}
+MZ MinAlloc:\t\t{}
+MZ MaxAlloc:\t\t{}
+MZ Initial SS:\t\t{}
+MZ Initial SP:\t\t{}
+MZ Checksum:\t\t{}
+MZ Initial IP:\t\t{}
+MZ Initial CS:\t\t{}
+MZ RelocPosition:\t{}
+MZ NOverlay:\t\t{}
+MZ OEM ID:\t\t{}
+MZ OEM INFO:\t\t{}
+MZ PE offset:\t\t{}
+PE Signature:\t\t{}
+PE Machine:\t\t{}
+PE NumSections:\t\t{}
+PE TimeDateStamp:\t{}
+PE Symbol Table:\t{}
+PE Symbol Count:\t{}
+PE Optional Table Size:\t{}
+PE Characteristics:\t{}
         """.format(
             self._mz_signature.decode('utf-8'),
             self._mz_lastsize,

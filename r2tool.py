@@ -40,7 +40,7 @@ def secuity(file):
     relro = data['info']['relro']
     strip = data['info']['stripped']
     canary = data['info']['canary']
-    result = "Security:\n\tnx:\t{}\n\tpic:\t{}\n\trelro:\t{}\n\tstrip:\t{}\n\tcanary:\t{}".format(nx, pic, relro, strip, canary)
+    result = "Security:\nnx:\t{}\npic:\t{}\nrelro:\t{}\nstrip:\t{}\ncanary:\t{}".format(nx, pic, relro, strip, canary)
     return result
 
 

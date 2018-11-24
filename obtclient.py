@@ -69,7 +69,9 @@ class OpenBinTool:
         data = self.smartsock.recv()
         if data == b"STATUS: OK - Asm":
             data = self.smartsock.recv()
-            print("\nASM:\n\t"+data.decode('utf-8'))
+            print("\nASM:\n"+"-"*50+"\n"+data.decode('utf-8'))
+        else:
+            print("\nASM:\n"+"-"*50+"\nError: Possibly no binary loaded")
 
     def connect(self, host, port):
         """
@@ -119,7 +121,7 @@ class OpenBinTool:
         self.parser.add_argument(
             '-r',
             '--radare2',
-            choices=["-f", "-i", "-ll", "-m", "-p", "-s", "-ss"]
+            choices=["f", "i", "l", "m", "p", "s", "ss"]
         )
         self.parser.add_argument(
             '-s',
@@ -130,6 +132,12 @@ class OpenBinTool:
             const=3,
             default=None,
             help="Strings utility"
+        )
+        self.parser.add_argument(
+            '-v',
+            '--virus',
+            action='store_true',
+            help="Check the loaded binary against VirusTotal"
         )
         required = self.parser.add_argument_group('required arguments')
         required.add_argument(
@@ -156,6 +164,8 @@ class OpenBinTool:
             self.r2(["-r", args.radare2])
         if args.strtolerance:
             self.strings(["-s", args.strtolerance])
+        if args.virus:
+            self.virus()
         self.quit()
 
     def disasm(self):
@@ -167,9 +177,9 @@ class OpenBinTool:
         data = self.smartsock.recv()
         if data == b"STATUS: OK - Disasm":
             data = self.smartsock.recv()
-            print("\nDISASM:\n\t"+data.decode('utf-8'))
+            print("\nDISASM:\n"+"-"*50+"\n"+data.decode('utf-8'))
         else:
-            print("\nDISASM:\n\tError: Possibly no binary loaded")
+            print("\nDISASM:\n"+"-"*50+"\nError: Possibly no binary loaded")
 
     def file(self):
         """
@@ -179,9 +189,9 @@ class OpenBinTool:
         if self.binary:
             magic_tool = obtmagic.MagicTool()
             mt_result = magic_tool.find_magic(self.binary)
-            print("\nFILE:\n\t"+mt_result)
+            print("\nFILE:\n"+"-"*50+"\n"+mt_result)
         else:
-            print("\nFILE:\n\tError: Possibly no binary loaded")
+            print("\nFILE:\n"+"-"*50+"\nError: Possibly no binary loaded")
 
     def info(self):
         """
@@ -189,10 +199,10 @@ class OpenBinTool:
         :return:
         """
         if self.binary_path:
-            print("\nINFO:")
+            print("\nINFO:\n"+"-"*50)
             loadertool.LoaderTool(self.binary_path)
         else:
-            print("\nINFO:\n\tError: Possibly no binary loaded")
+            print("\nINFO:\n"+"-"*50+"\nError: Possibly no binary loaded")
 
     def keyexchange(self):
         """
@@ -222,10 +232,11 @@ class OpenBinTool:
                 self.binary = fd.read()
                 self.smartsock.send(self.binary)
                 fd.close()
+                print("\nLOAD:\n"+"-"*50+"\nSUCCESS")
             else:
-                print("\nLOAD:\n\tError: Failure to load file")
+                print("\nLOAD:\n"+"-"*50+"\nError: Failure to load file")
         else:
-            print("\nLOAD:\n\tError: Missing FILE to load")
+            print("\nLOAD:\n"+"-"*50+"\nError: Missing FILE to load")
 
     def quit(self):
         """
@@ -236,10 +247,10 @@ class OpenBinTool:
         data = self.smartsock.recv()
         if data == b"STATUS: OK - Quiting":
             self.smartsock.close()
-            print("\nQUIT:\n\tSuccess")
+            print("\nQUIT:\n"+"-"*50+"\nSuccess")
             sys.exit()
         else:
-            print("\nQUIT:\n\tError: Failure to quit")
+            print("\nQUIT:\n"+"-"*50+"\nError: Failure to quit")
 
     def r2(self, cmd):
         """
@@ -257,11 +268,11 @@ class OpenBinTool:
                 if result == b"STATUS: OK - Send r2pipe cmd":
                     self.smartsock.send(options[1])
                     result = self.smartsock.recv()
-                print("\nR2:\n\t"+result.decode("utf-8"))
+                print("\nR2:\n"+"-"*50+"\n"+result.decode("utf-8"))
             else:
-                print("\nR2:\n\tError: Possibly no binary loaded")
+                print("\nR2:\n"+"-"*50+"\nError: Possibly no binary loaded")
         else:
-            print("\nR2:\n\tError: Must supply option when using radare2 flag")
+            print("\nR2:\n"+"-"*50+"\nError: Must supply option when using radare2 flag")
 
     def repl(self):
         """
@@ -290,6 +301,8 @@ class OpenBinTool:
                 self.r2(cmd)
             elif cmd[0] in ["s", "strings"]:
                 self.strings(cmd)
+            elif cmd[0] in ["v", "virus"]:
+                self.virus()
             else:
                 print("Command {} currently not supported".format(cmd))
                 print("Enter (h)elp for a list of commands")
@@ -319,6 +332,7 @@ class OpenBinTool:
         print("\t(r)adare2 OPT\tInteract with radare2 using option OPT")
         print("\t(s)trings TOL\tDisplays ASCII printable strings with tolerance TOL")
         print("\t(q)uit      \tExit program")
+        print("\t(v)irus     \tCheck the loaded file against VirusTotal")
 
     def strings(self, cmd):
         """
@@ -326,10 +340,28 @@ class OpenBinTool:
         :param cmd:
         :return:
         """
-        if len(cmd) == 2:
-            stringtool.strings(self.binary, cmd[1])
+        if self.binary:
+            if len(cmd) == 2:
+                print("\nSTRINGS:\n"+"-"*50)
+                stringtool.strings(self.binary, cmd[1])
+            else:
+                print("\nSTRINGS:\n" + "-" * 50)
+                stringtool.strings(self.binary)
         else:
-            stringtool.strings(self.binary)
+            print("\nSTRINGS:\n"+"-"*50+"\nError: No binary loaded")
+
+    def virus(self):
+        """
+
+        :return:
+        """
+        self.smartsock.send("virus")
+        data = self.smartsock.recv()
+        if data == b"STATUS: OK - Virus Check":
+            data = self.smartsock.recv().decode('utf-8').strip()
+            print("\nVIRUS:\n"+"-"*50+"\n"+data)
+        else:
+            print("\nVIRUS:\n"+"-"*50+"\nError: Possibly no binary loaded")
 
 
 def main():

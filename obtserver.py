@@ -37,6 +37,7 @@ import random
 import smartsocket
 import obtdisasm
 import r2tool
+import virustotal_api
 
 BUFF = 1024
 HOST = '127.0.0.1'
@@ -99,29 +100,31 @@ def handler(client, addr):
             elif data == b"radare2":
                 smartsock.send("STATUS: OK - Send cmd")
                 cmd = smartsock.recv()
-                if cmd == b"-i":
+                if cmd == b"i":
                     result = r2tool.imports(file_disk[0])
                     smartsock.send(result)
-                elif cmd == b"-m":
+                elif cmd == b"m":
                     result = r2tool.mainaddr(file_disk[0])
                     smartsock.send(result)
-                elif cmd == b"-s":
+                elif cmd == b"s":
                     result = r2tool.secuity(file_disk[0])
                     smartsock.send(result)
-                elif cmd == b"-ss":
+                elif cmd == b"ss":
                     result = r2tool.sections(file_disk[0])
                     smartsock.send(result)
-                elif cmd == b"-l":
+                elif cmd == b"l":
                     result = r2tool.linkedlibs(file_disk[0])
                     smartsock.send(result)
-                elif cmd == b"-f":
+                elif cmd == b"f":
                     result = r2tool.functions(file_disk[0])
                     smartsock.send(result)
-                elif cmd == b"-p":
+                elif cmd == b"p":
                     smartsock.send("STATUS: OK - Send r2pipe cmd")
                     cmd = smartsock.recv()
                     result = r2tool.pipe(str(cmd), file_disk[0])
                     smartsock.send(result)
+                else:
+                    smartsock.send("Error: Incorrect arg")
             elif data == b"quit":
                 smartsock.send("STATUS: OK - Quiting")
                 smartsock.close()
@@ -133,6 +136,14 @@ def handler(client, addr):
                 except:
                     print("Error: Problem closing/removing tmp file")
                 break
+            elif data == b"virus":
+                if None not in file_disk:
+                    smartsock.send("STATUS: OK - Virus Check")
+                    resource = virustotal_api.queue(file_disk[0])['resource']
+                    result = virustotal_api.reports(resource)
+                    smartsock.send(result)
+                else:
+                    smartsock.send("Error: No file loaded")
             else:
                 smartsock.send("STATUS: ERROR\n")
                 smartsock.send(list_commands())
