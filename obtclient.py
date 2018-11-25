@@ -121,7 +121,7 @@ class OpenBinTool:
         self.parser.add_argument(
             '-r',
             '--radare2',
-            choices=["f", "i", "l", "m", "p", "s", "ss"]
+            nargs="+"
         )
         self.parser.add_argument(
             '-s',
@@ -162,7 +162,11 @@ class OpenBinTool:
             if args.info:
                 self.info()
             if args.radare2:
-                self.r2(["-r", args.radare2])
+                # choices=["f", "i", "l", "m", "p", "s", "ss"]
+                if args.radare2[0] in ["f", "i", "l", "m", "s", "ss"]:
+                    self.r2(["-r", args.radare2[0]])
+                elif args.radare2[0] == 'p':
+                    self.r2(["-r", args.radare2[0], args.radare2[1]])
             if args.strtolerance:
                 self.strings(["-s", args.strtolerance])
             if args.virus:
