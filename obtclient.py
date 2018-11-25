@@ -200,7 +200,13 @@ class OpenBinTool:
         """
         if self.binary_path:
             print("\nINFO:\n"+"-"*50)
-            loadertool.LoaderTool(self.binary_path)
+            obj = loadertool.LoaderTool(self.binary_path)
+            if obj.ELF:
+                info = obj.ELF.info()
+            elif obj.PE:
+                info = obj.PE.info()
+
+            print(info)
         else:
             print("\nINFO:\n"+"-"*50+"\nError: Possibly no binary loaded")
 
