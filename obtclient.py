@@ -150,23 +150,26 @@ class OpenBinTool:
         )
         args = self.parser.parse_args()
 
-        # Load file is mandatory so no need for "if" statement
-        self.load(["-l", args.load[0]])
-        if args.asm:
-            self.asm()
-        if args.disasm:
-            self.disasm()
-        if args.file:
-            self.file()
-        if args.info:
-            self.info()
-        if args.radare2:
-            self.r2(["-r", args.radare2])
-        if args.strtolerance:
-            self.strings(["-s", args.strtolerance])
-        if args.virus:
-            self.virus()
-        self.quit()
+        try:
+            # Load file is mandatory so no need for "if" statement
+            self.load(["-l", args.load[0]])
+            if args.asm:
+                self.asm()
+            if args.disasm:
+                self.disasm()
+            if args.file:
+                self.file()
+            if args.info:
+                self.info()
+            if args.radare2:
+                self.r2(["-r", args.radare2])
+            if args.strtolerance:
+                self.strings(["-s", args.strtolerance])
+            if args.virus:
+                self.virus()
+            self.quit()
+        except (BrokenPipeError, IOError):
+            self.quit(silent=True)
 
     def disasm(self):
         """
@@ -244,7 +247,7 @@ class OpenBinTool:
         else:
             print("\nLOAD:\n"+"-"*50+"\nError: Missing FILE to load")
 
-    def quit(self):
+    def quit(self,silent=False):
         """
         Method OpenBinTool.quit()
         :return:
@@ -253,10 +256,12 @@ class OpenBinTool:
         data = self.smartsock.recv()
         if data == b"STATUS: OK - Quiting":
             self.smartsock.close()
-            print("\nQUIT:\n"+"-"*50+"\nSuccess")
+            if not silent:
+                print("\nQUIT:\n"+"-"*50+"\nSuccess")
             sys.exit()
         else:
-            print("\nQUIT:\n"+"-"*50+"\nError: Failure to quit")
+            if not silent:
+                print("\nQUIT:\n"+"-"*50+"\nError: Failure to quit")
 
     def r2(self, cmd):
         """
