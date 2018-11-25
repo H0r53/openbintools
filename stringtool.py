@@ -66,9 +66,9 @@ def strings(byte_array, tolerance=3):
                 Requirement - mandatory,
                 Argument Type - positional(1st)
             - tolerance:
-                Description - length of contiguous ascii characters to be consider a string
-                Data Type - integer
-                Requirement - Optional(default=3)
+                Description - length of contiguous ascii characters to be consider a string,
+                Data Type - integer,
+                Requirement - Optional(default=3),
                 Argument Type - positional(2nd)
 
         Return:
