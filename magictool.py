@@ -1,33 +1,164 @@
 #!/usr/bin/python3
 
 """
-# Authors:      Jacob Mills, Brandon Everhart
-# Date:         09/17/2018
-#
-# Description:  A utility for identifying files by their magic number association with known file types
-#
-# Usage: data = open('filename','rb').read()
-#        magic_tool = MagicTool()
-#        magic_tool.find_magic(data)
-#
-# Changelog:
-#
+    File:
+        - magictool.py
+
+    Authors:
+        - Jacob Mills,
+        - Brandon Everhart,
+        - Taylor Shields
+
+    Date: 11/25/2018
+
+    Description:
+        - A utility for identifying files by their magic number association with known file types
+        - Usage:
+            data = open('filename','rb').read()
+            magic_tool = MagicTool()
+            magic_tool.find_magic(data)
+
+    Changelog:
+        - 9/17 Created
+        - 11/25 Documented
+        - 11/25 Cleaned formatting based on PyCharm, PyLint3, PEP8
+        - 11/25 Pylint score 2.71/10 --> 3.56/10
+            Note:
+                Ignored "Line too long" for readability purposes
+                Ignored "Too few public methods" for
+                Ignored "Too many statements" for
 """
 
 
-class FileObject(object):
+def docs():
+    """
+    Function:
+        magictool.docs()
+
+        Description:
+            Prints all docstrings related to this file.
+
+        Parameters:
+            - None
+
+        Return:
+            - None
+    """
+    print(__doc__)
+    print(docs.__doc__)
+    print(FileObject.__init__.__doc__)
+    print(MagicTool.__init__.__doc__)
+    print(MagicTool.find_magic.__doc__)
+    print(MagicTool.loadfiles.__doc__)
+    print(FileUtils.hexstr2hexarray.__doc__)
+
+
+class FileObject():
+    """
+    Class:
+        magictool.FileObject
+
+        Description:
+            -
+
+        Parameters:
+            - None
+
+        Functions:
+            - __init__()
+    """
     def __init__(self, description, offset, extensions, magic):
+        """
+        Function:
+            magictool.FileObject.__init__()
+
+        Description:
+            -
+
+        Parameters:
+            - description:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+            - offset:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (2nd)
+            - extensions:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (3rd)
+            - magic:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (4th)
+
+        Return:
+            - None
+        """
         self.description = description
         self.offset = offset
         self.extensions = extensions
         self.magic = magic
 
-class MagicTool(object):
+
+class MagicTool():
+    """
+    Class:
+        magictool.MagicTool
+
+        Description:
+            -
+
+        Parameters:
+            - None
+
+        Functions:
+            - __init__()
+            - find_magic()
+            - loadfiles()
+    """
     def __init__(self):
+        """
+        Function:
+           magictool.MagicTool.__init__()
+
+        Description:
+            - Creates list of file magic numbers by running magictool.loadfiles().
+
+        Parameters:
+            - None
+
+        Return:
+            - None
+        """
         self.files = []
         self.loadfiles()
 
     def find_magic(self, sourcebytes):
+        """
+        Function:
+            magictool.MagicTool.find_magic()
+
+        Description:
+            -
+
+        Parameters:
+            - sourcebytes:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+
+        Return:
+            - retval:
+                Description -
+                Data Type -
+        """
         retval = ""
         matches = 0
         for file in self.files:
@@ -50,7 +181,19 @@ class MagicTool(object):
 
     def loadfiles(self):
         """
-        Note: Sources defined from data on https://en.wikipedia.org/wiki/List_of_file_signatures
+        Function:
+            magictool.MagicTool.loadfiles()
+
+        Description:
+            - List of different magic numbers with their associated file type information.
+            - Note: Sources defined from data on
+            https://en.wikipedia.org/wiki/List_of_file_signatures
+
+        Parameters:
+            - None
+
+        Return:
+            - None
         """
         self.files.append(FileObject("Libpcap File Format", 0x0, ["pcap"], [0xa1, 0xb2, 0xc3, 0xd4]))
         self.files.append(FileObject("Libpcap File Format", 0x0, ["pcap"], [0xd4, 0xc3, 0xb2, 0xa1]))
@@ -194,12 +337,46 @@ class MagicTool(object):
         self.files.append(FileObject("Tableau Datasource", 0x0, ["tde"], [0x20, 0x02, 0x01, 0x62, 0xA0, 0x1E, 0xAB, 0x07, 0x02, 0x00, 0x00, 0x00]))
 
 
+class FileUtils():
+    """
+    Class:
+        magictool.FileUtils
 
+        Description:
+            -
 
-class FileUtils(object):
+        Parameters:
+            - None
 
+        Functions:
+            - hexstr2hexarray()
+    """
     @staticmethod
     def hexstr2hexarray(data, delimiter=" "):
+        """
+        Function:
+            magictool.FileUtils.hexstr2hexarray()
+
+        Description:
+            -
+
+        Parameters:
+            - data:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+            - delimiter:
+                Description - ,
+                Data Type - ,
+                Requirement - optional(default=" ")
+                Argument Type - Positional (2nd)
+
+        Return:
+            - retval:
+                Description -
+                Data Type -
+        """
         tmp = data.split(delimiter)
         retval = "["
         for i in tmp:
@@ -207,7 +384,11 @@ class FileUtils(object):
                 retval += "None"
             else:
                 retval += "0x" + i
-            if i is not tmp[len(tmp ) -1]:
+            if i is not tmp[len(tmp) - 1]:
                 retval += ", "
         retval += "]"
         return retval
+
+
+if __name__ == "__main__":
+    docs()

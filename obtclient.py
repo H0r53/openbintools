@@ -34,7 +34,7 @@ import socket
 import argparse
 
 # Project File Imports
-import obtmagic
+import magictool
 import smartsocket
 import stringtool
 import loadertool
@@ -194,7 +194,7 @@ class OpenBinTool:
         :return:
         """
         if self.binary:
-            magic_tool = obtmagic.MagicTool()
+            magic_tool = magictool.MagicTool()
             mt_result = magic_tool.find_magic(self.binary)
             print("\nFILE:\n"+"-"*50+"\n"+mt_result)
         else:
