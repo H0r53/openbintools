@@ -343,10 +343,13 @@ class OpenBinTool:
         if self.binary:
             if len(cmd) == 2:
                 print("\nSTRINGS:\n"+"-"*50)
-                stringtool.strings(self.binary, int(cmd[1]))
+                strlist = stringtool.strings(self.binary, int(cmd[1]))
             else:
                 print("\nSTRINGS:\n" + "-" * 50)
-                stringtool.strings(self.binary)
+                strlist = stringtool.strings(self.binary)
+
+            for key, value in strlist.items():
+                print("[{}] {}".format(value, key))
         else:
             print("\nSTRINGS:\n"+"-"*50+"\nError: No binary loaded")
 

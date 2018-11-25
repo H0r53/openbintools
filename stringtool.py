@@ -16,12 +16,13 @@
         consecutive characters that constitute a string. Tabs and spaces are allowed;
         however, they are stripped from the beginning and end of identified strings. All
         other whitespace and nonprintable characters are ignored. Finally, the number of
-        times an identified string occurs is prepended to the final output.
+        times an identified string occurs is prepended to the final return dictionary.
 
         if __name__ == "__main__":
             docs()
 
     Changelog:
+        - 11/25 Switched to returning result instead of printing
         - 11/24 Documented
         - 11/24 Cleaned formatting based on PyCharm, PyLint3, PEP8
         - 11/24 PyLint score ??? --> 10.00/10
@@ -72,7 +73,9 @@ def strings(byte_array, tolerance=3):
                 Argument Type - positional(2nd)
 
         Return:
-            - None
+            - strlist:
+                Description - dictionary containing all found strings and their count
+                Data Type - dictionary
     """
     alpha = list(printable)
     for char in whitespace:
@@ -93,8 +96,7 @@ def strings(byte_array, tolerance=3):
                     strlist[mstr] = 1
             mstr = ''
 
-    for key, value in strlist.items():
-        print("[{}] {}".format(value, key))
+    return strlist
 
 
 if __name__ == "__main__":
