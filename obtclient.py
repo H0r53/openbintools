@@ -343,7 +343,7 @@ class OpenBinTool:
         if self.binary:
             if len(cmd) == 2:
                 print("\nSTRINGS:\n"+"-"*50)
-                stringtool.strings(self.binary, cmd[1])
+                stringtool.strings(self.binary, int(cmd[1]))
             else:
                 print("\nSTRINGS:\n" + "-" * 50)
                 stringtool.strings(self.binary)
