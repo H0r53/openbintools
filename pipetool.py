@@ -6,7 +6,7 @@
 
     Authors:
         - Jacob Mills,
-        - Brandon Everhart
+        - Brandon Everhart,
         - Taylor Shields
 
     Date: 11/24/2018
