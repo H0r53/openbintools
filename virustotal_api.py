@@ -93,8 +93,14 @@ def queue(filename):
         files=files,
         params=params
     )
-
-    return response.json()
+    print(response)
+    try:
+        return response.json()
+    except ValueError as error:
+        if response.status_code == 403:
+            return "Error: Missing VirusTotal API Key"
+        else:
+            return error
 
 
 def reports(resource):

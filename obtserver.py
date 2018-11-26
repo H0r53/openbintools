@@ -141,13 +141,17 @@ def handler(client, addr):
                 if None not in file_disk:
                     smartsock.send("STATUS: OK - Virus Check")
                     response = virustotal_api.queue(file_disk[0])
-                    response_pretty = ""
-                    for key, value in response.items():
-                        response_pretty = response_pretty + str(key) + ": " + str(value) + "\n"
-                    print(response_pretty)
-                    smartsock.send(response_pretty)
-                    result = virustotal_api.reports(response['resource'])
-                    smartsock.send(result)
+                    print(response)
+                    if "Error: Missing VirusTotal API Key" not in response:
+                        response_pretty = ""
+                        for key, value in response.items():
+                            response_pretty = response_pretty + str(key) + ": " + str(value) + "\n"
+                        smartsock.send(response_pretty)
+                        result = virustotal_api.reports(response['resource'])
+                        smartsock.send(result)
+                    else:
+                        smartsock.send(response)  # send response error
+                        smartsock.send(response)  # send response error, as it is the same error for report
                 else:
                     smartsock.send("Error: No file loaded")
             else:
