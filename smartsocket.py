@@ -66,7 +66,9 @@ class SmartSocket():
         smartsocket.SmartSocket
 
         Description:
-            -
+            - Handles secure socket communication through the sending
+            and receiving of messages, encrypting and decrypting said messages,
+            and padding and unpadding those messages.
 
         Parameters:
             - None
@@ -88,11 +90,11 @@ class SmartSocket():
             smartsocket.SmartSocket.__init__()
 
         Description:
-            -
+            - Initialize SmartSocket object with default and specified parameters.
 
         Parameters:
             - socket:
-                Description - ,
+                Description - socket object,
                 Data Type - socket,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
@@ -106,7 +108,7 @@ class SmartSocket():
         self.shared_base = 5
         self.secret = random.SystemRandom().getrandbits(20)
         self.key = b'arbitrarily long key'
-        self.mode = Blowfish.MODE_CBC           # Do we want CBC??
+        self.mode = Blowfish.MODE_CBC
 
     def send(self, data):
         """
@@ -114,16 +116,14 @@ class SmartSocket():
             smartsocket.SmartSocket.send()
 
         Description:
-            - A '1' or '0' is appended to the beginning of the msg to represent if
-            encryption/decryption is needed; this means when receiving data we
-            must check and remove the first byte.
-            - However, when sending the length of the buffer, the extra byte is not sent
-            so the getlen flag is added to the recv and recvall method.
+            - Encrypts the data then sends the encrypted ciphertext by
+            first sending the length of the ciphertext and then sending
+            the actual ciphertext.
 
         Parameters:
             - data:
-                Description - ,
-                Data Type - ,
+                Description - byte stream of data to be sent between 2 SmartSocket instances,
+                Data Type - byte stream,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
 
@@ -142,19 +142,17 @@ class SmartSocket():
             smartsocket.SmartSocket.recv()
 
         Description:
-            - A '1' or '0' is appended to the beginning of the msg to represent if
-            encryption/decryption is needed, this means when receiving data we
-            must check and remove the first byte.
-            - However, when sending the length of the buffer the extra byte is not sent
-            so the getlen flag is added to the recv and recvall method.
+           - Receives the length of the ciphertext, then receives the number
+           of bytes specified by length, and then decrypts the bytes that have
+            been received and returns the plaintext string.
 
         Parameters:
             - None
 
         Return:
             - self.decrypt(ciphertext):
-                Description -
-                Data Type -
+                Description - string of original plaintext
+                Data Type - string
         """
         lengthbuf = self.recvall(4)
         length, = struct.unpack('!I', lengthbuf)
@@ -167,19 +165,20 @@ class SmartSocket():
             smartsocket.SmartSocket.recvall()
 
         Description:
-            -
+            - Receives a byte stream of specified length until complete
+             message is collected, then returns byte stream.
 
         Parameters:
             - count:
-                Description - ,
-                Data Type - ,
+                Description - length of bytes to be received,
+                Data Type - integer,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
 
         Return:
             - retval:
-                Description -
-                Data Type -
+                Description - byte stream received from socket
+                Data Type - byte stream
         """
         retval = b''
         while count:
@@ -196,19 +195,21 @@ class SmartSocket():
             smartsocket.SmartSocket.encrypt()
 
         Description:
-            -
+            - Encrypts a message by using the Blowfish cipher using cipher block
+             chaining mode with a cryptographically secure randomly generated
+             nonce and a symmetric key.
 
         Parameters:
             - plaintext:
-                Description - ,
-                Data Type - ,
+                Description - the unencrypted message,
+                Data Type - string,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
 
         Return:
             - msg:
-                Description -
-                Data Type -
+                Description - the encrypted message
+                Data Type - string
         """
         nonce = Random.new().read(self.blocksize)
         cipher = Blowfish.new(self.key, self.mode, nonce)
@@ -222,19 +223,21 @@ class SmartSocket():
             smartsocket.SmartSocket.decrypt()
 
         Description:
-            -
+            - Decrypts a message by reversing the Blowfish cipher using cipher block
+             chaining mode with a cryptographically secure randomly generated
+             nonce and a symmetric key.
 
         Parameters:
             - ciphertext:
-                Description - ,
-                Data Type - ,
+                Description - the encrypted message,
+                Data Type - string,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
 
         Return:
             - msg:
-                Description -
-                Data Type -
+                Description - the decrypted/unencrypted message
+                Data Type - string
         """
         nonce = ciphertext[:self.blocksize]
         ciphertext = ciphertext[self.blocksize:]
@@ -261,15 +264,15 @@ class SmartSocket():
 
         Parameters:
             - plaintext:
-                Description - ,
-                Data Type - ,
+                Description - the unencrypted message,
+                Data Type - string,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
 
         Return:
             - struct.pack('b' * pad_length, *padding):
-                Description -
-                Data Type -
+                Description - the padded message
+                Data Type - byte stream
         """
         pad_length = self.blocksize - (len(plaintext) % self.blocksize)
         padding = [pad_length] * pad_length
@@ -286,15 +289,15 @@ class SmartSocket():
 
         Parameters:
             - msg:
-                Description - ,
-                Data Type - ,
+                Description - the padded message,
+                Data Type - string,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
 
         Return:
             - msg[:-pad_length]
-                Description -
-                Data Type -
+                Description - message without padding
+                Data Type - string
         """
         if isinstance(msg[-1], int):
             pad_length = msg[-1]
@@ -308,7 +311,7 @@ class SmartSocket():
             smartsocket.SmartSocket.close()
 
         Description:
-            -
+            - Closes the socket.
 
         Parameters:
             - None
