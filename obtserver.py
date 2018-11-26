@@ -139,8 +139,13 @@ def handler(client, addr):
             elif data == b"virus":
                 if None not in file_disk:
                     smartsock.send("STATUS: OK - Virus Check")
-                    resource = virustotal_api.queue(file_disk[0])['resource']
-                    result = virustotal_api.reports(resource)
+                    response = virustotal_api.queue(file_disk[0])
+                    response_pretty = ""
+                    for key, value in response.items():
+                        response_pretty = response_pretty + str(key) + ": " + str(value) + "\n"
+                    print(response_pretty)
+                    smartsock.send(response_pretty)
+                    result = virustotal_api.reports(response['resource'])
                     smartsock.send(result)
                 else:
                     smartsock.send("Error: No file loaded")

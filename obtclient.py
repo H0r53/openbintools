@@ -376,8 +376,11 @@ class OpenBinTool:
         self.smartsock.send("virus")
         data = self.smartsock.recv()
         if data == b"STATUS: OK - Virus Check":
+            print("\nVIRUS:\n" + "-" * 50)
+            response = self.smartsock.recv().decode('utf-8').strip()
+            print("RESPONSE:\n"+response)
             data = self.smartsock.recv().decode('utf-8').strip()
-            print("\nVIRUS:\n"+"-"*50+"\n"+data)
+            print("\nREPORT:\n" + data)
         else:
             print("\nVIRUS:\n"+"-"*50+"\nError: Possibly no binary loaded")
 
