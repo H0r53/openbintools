@@ -32,6 +32,7 @@
 import sys
 import socket
 import argparse
+import signal
 
 # Project File Imports
 import magictool
@@ -165,7 +166,7 @@ class OpenBinTool:
                 self.info()
             if args.strtolerance:
                 self.strings(["-s", args.strtolerance])
-            if self.smartsocket:
+            if self.smartsock:
                 if args.asm:
                     self.asm()
                 if args.disasm:
@@ -245,18 +246,24 @@ class OpenBinTool:
         """
         if len(cmd) == 2:
             self.binary_path = cmd[1]
-            fd = open(self.binary_path, 'rb')
-            self.binary = fd.read()
-            print("\nLOAD:\n" + "-" * 50 + "\nLOCAL SUCCESS")
-            if self.smartsock:
-                self.smartsock.send("load")
-                data = self.smartsock.recv()
-                if data == b"STATUS: OK - Begin":
-                    self.smartsock.send(self.binary)
-                    fd.close()
-                    print("\nLOAD:\n"+"-"*50+"\nREMOTE SUCCESS")
-                else:
-                    print("\nLOAD:\n"+"-"*50+"\nREMOTE Error: Failure to load file")
+            print("\nLOAD:\n" + "-" * 50)
+            try:
+                fd = open(self.binary_path, 'rb')
+                self.binary = fd.read()
+                print("LOCAL SUCCESS")
+                if self.smartsock:
+                    self.smartsock.send("load")
+                    data = self.smartsock.recv()
+                    if data == b"STATUS: OK - Begin":
+                        self.smartsock.send(self.binary)
+                        fd.close()
+                        print("REMOTE SUCCESS")
+                    else:
+                        print("REMOTE Error: Failure to load file")
+            except FileNotFoundError:
+                print("LOCAL Error: File does not exists")
+                self.binary = None
+                self.binary_path = None
         else:
             print("\nLOAD:\n"+"-"*50+"\nError: Missing FILE to load")
 
@@ -311,33 +318,34 @@ class OpenBinTool:
         cmd = None
         while True:
             cmd = input("> ").split()
-            if cmd[0] in ["f", "file"]:
-                self.file()
-            elif cmd[0] in ["h", "help"]:
-                self.repl_usage()
-            elif cmd[0] in ["i", "info"]:
-                self.info()
-            elif cmd[0] in ["l", "load"]:
-                self.load(cmd)
-            elif cmd[0] in ["s", "strings"]:
-                self.strings(cmd)
-            elif cmd[0] in ["q", "quit"]:
-                self.quit()
-            elif self.smartsock:
-                if cmd[0] in ["a", "asm"]:
-                    self.asm()
-                elif cmd[0] in ["d", "disasm"]:
-                    self.disasm()
-                elif cmd[0] in ["r", "radare2"]:
-                    self.r2(cmd)
-                elif cmd[0] in ["v", "virus"]:
-                    self.virus()
+            if cmd:
+                if cmd[0] in ["f", "file"]:
+                    self.file()
+                elif cmd[0] in ["h", "help"]:
+                    self.repl_usage()
+                elif cmd[0] in ["i", "info"]:
+                    self.info()
+                elif cmd[0] in ["l", "load"]:
+                    self.load(cmd)
+                elif cmd[0] in ["s", "strings"]:
+                    self.strings(cmd)
+                elif cmd[0] in ["q", "quit"]:
+                    self.quit()
+                elif self.smartsock:
+                    if cmd[0] in ["a", "asm"]:
+                        self.asm()
+                    elif cmd[0] in ["d", "disasm"]:
+                        self.disasm()
+                    elif cmd[0] in ["r", "radare2"]:
+                        self.r2(cmd)
+                    elif cmd[0] in ["v", "virus"]:
+                        self.virus()
+                    else:
+                        print("Command {} currently not supported".format(cmd))
+                        print("Enter (h)elp for a list of commands")
                 else:
                     print("Command {} currently not supported".format(cmd))
                     print("Enter (h)elp for a list of commands")
-            else:
-                print("Command {} currently not supported".format(cmd))
-                print("Enter (h)elp for a list of commands")
 
     @staticmethod
     def repl_welcome():
@@ -414,17 +422,27 @@ def main():
 
     tool.connect(host, port)
 
-    # If no command line arguments are provided enter cli
-    if len(sys.argv) == 1:
-        # Welcome message
-        tool.repl_welcome()
+    try:
+        # If no command line arguments are provided enter cli
+        if len(sys.argv) == 1:
+            # Welcome message
+            tool.repl_welcome()
 
-        # REPL menu interface
-        tool.repl()
-
-    # Else execute provided arguments and exit
-    else:
-        tool.cli()
+            # REPL menu interface
+            try:
+                tool.repl()
+            except BrokenPipeError:
+                print("ERROR: Connection to server lost.\nSwitching to LOCAL")
+                tool.smartsock = None
+                tool.repl()
+        # Else execute provided arguments and exit
+        else:
+            tool.cli()
+    except (KeyboardInterrupt, EOFError):
+        tool.quit()
+    except BrokenPipeError:
+        print("ERROR: Connection to server lost")
+        sys.exit()
 
 
 if __name__ == "__main__":
