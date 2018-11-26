@@ -184,7 +184,9 @@ def pipe(cmd, file):
     """
     radare2 = r2pipe.open(file)
     radare2.cmd("aaaa")
-    return radare2.cmd(cmd[2:-1])
+    result = radare2.cmd(cmd[2:-1])
+    radare2.quit()
+    return result
 
 
 def security(file):
