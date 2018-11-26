@@ -35,6 +35,7 @@ import _thread
 import os
 import random
 import smartsocket
+
 import obtdisasm
 import r2tool
 import virustotal_api
@@ -107,7 +108,7 @@ def handler(client, addr):
                     result = r2tool.mainaddr(file_disk[0])
                     smartsock.send(result)
                 elif cmd == b"s":
-                    result = r2tool.secuity(file_disk[0])
+                    result = r2tool.security(file_disk[0])
                     smartsock.send(result)
                 elif cmd == b"ss":
                     result = r2tool.sections(file_disk[0])

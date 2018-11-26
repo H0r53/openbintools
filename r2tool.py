@@ -187,7 +187,7 @@ def pipe(cmd, file):
     return radare2.cmd(cmd[2:-1])
 
 
-def secuity(file):
+def security(file):
     """
     Function:
         r2tool.security()
