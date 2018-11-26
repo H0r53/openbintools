@@ -15,7 +15,7 @@
          The shim sends a queue to VirusTotal through the queue() function then retrieves
          the result via the report() function.
 
-        - A valid VirusTotal Community API key must be coppied below where you see:
+        - A valid VirusTotal Community API key must be copied below where you see:
             APIKEY = 'Copy your personal VirusTotal Community API key here'
 
         - For more information on the VirusTotal API see:
@@ -25,6 +25,7 @@
             docs()
 
     Changelog:
+        - 11/25 Handle when a correct API key has not been supplied
         - 11/24 Documented
         - 11/24 Cleaned formatting based on PyCharm, PyLint3, PEP8
         - 11/24 Expanded single line list comprehensions into readable loops
@@ -98,9 +99,10 @@ def queue(filename):
         return response.json()
     except ValueError as error:
         if response.status_code == 403:
-            return "Error: Missing VirusTotal API Key"
+            retval = "Error: Missing VirusTotal API Key"
         else:
-            return error
+            retval = error
+        return retval
 
 
 def reports(resource):
