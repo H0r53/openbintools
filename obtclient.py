@@ -80,10 +80,16 @@ class OpenBinTool:
         :param port:
         :return:
         """
-        self.socket = socket.socket()
-        self.socket.connect((host, port))
-        self.smartsock = smartsocket.SmartSocket(self.socket)
-        self.smartsock.key = self.keyexchange()
+        try:
+            self.socket = socket.socket()
+            self.socket.connect((host, port))
+            self.smartsock = smartsocket.SmartSocket(self.socket)
+            self.smartsock.key = self.keyexchange()
+        except ConnectionRefusedError:
+            print("NOTE: Connection to server at {}:{} failed.\nOnly local client features will be functional\n".format(
+                host,
+                port)
+            )
 
     def cli(self):
         """
@@ -153,24 +159,25 @@ class OpenBinTool:
         try:
             # Load file is mandatory so no need for "if" statement
             self.load(["-l", args.load[0]])
-            if args.asm:
-                self.asm()
-            if args.disasm:
-                self.disasm()
             if args.file:
                 self.file()
             if args.info:
                 self.info()
-            if args.radare2:
-                # choices=["f", "i", "l", "m", "p", "s", "ss"]
-                if args.radare2[0] in ["f", "i", "l", "m", "s", "ss"]:
-                    self.r2(["-r", args.radare2[0]])
-                elif args.radare2[0] == 'p':
-                    self.r2(["-r", args.radare2[0], args.radare2[1]])
             if args.strtolerance:
                 self.strings(["-s", args.strtolerance])
-            if args.virus:
-                self.virus()
+            if self.smartsocket:
+                if args.asm:
+                    self.asm()
+                if args.disasm:
+                    self.disasm()
+                if args.virus:
+                    self.virus()
+                if args.radare2:
+                    # choices=["f", "i", "l", "m", "p", "s", "ss"]
+                    if args.radare2[0] in ["f", "i", "l", "m", "s", "ss"]:
+                        self.r2(["-r", args.radare2[0]])
+                    elif args.radare2[0] == 'p':
+                        self.r2(["-r", args.radare2[0], args.radare2[1]])
             self.quit()
         except (BrokenPipeError, IOError):
             self.quit(silent=True)
@@ -237,35 +244,41 @@ class OpenBinTool:
         :return:
         """
         if len(cmd) == 2:
-            self.smartsock.send("load")
-            data = self.smartsock.recv()
-            if data == b"STATUS: OK - Begin":
-                self.binary_path = cmd[1]
-                fd = open(self.binary_path, 'rb')
-                self.binary = fd.read()
-                self.smartsock.send(self.binary)
-                fd.close()
-                print("\nLOAD:\n"+"-"*50+"\nSUCCESS")
-            else:
-                print("\nLOAD:\n"+"-"*50+"\nError: Failure to load file")
+            self.binary_path = cmd[1]
+            fd = open(self.binary_path, 'rb')
+            self.binary = fd.read()
+            print("\nLOAD:\n" + "-" * 50 + "\nLOCAL SUCCESS")
+            if self.smartsock:
+                self.smartsock.send("load")
+                data = self.smartsock.recv()
+                if data == b"STATUS: OK - Begin":
+                    self.smartsock.send(self.binary)
+                    fd.close()
+                    print("\nLOAD:\n"+"-"*50+"\nREMOTE SUCCESS")
+                else:
+                    print("\nLOAD:\n"+"-"*50+"\nREMOTE Error: Failure to load file")
         else:
             print("\nLOAD:\n"+"-"*50+"\nError: Missing FILE to load")
 
-    def quit(self,silent=False):
+    def quit(self, silent=False):
         """
         Method OpenBinTool.quit()
         :return:
         """
-        self.smartsock.send("quit")
-        data = self.smartsock.recv()
-        if data == b"STATUS: OK - Quiting":
-            self.smartsock.close()
-            if not silent:
-                print("\nQUIT:\n"+"-"*50+"\nSuccess")
-            sys.exit()
+        if self.smartsock:
+            self.smartsock.send("quit")
+            data = self.smartsock.recv()
+            if data == b"STATUS: OK - Quiting":
+                self.smartsock.close()
+                if not silent:
+                    print("\nQUIT:\n"+"-"*50+"\nSuccess")
+                sys.exit()
+            else:
+                if not silent:
+                    print("\nQUIT:\n"+"-"*50+"\nError: Failure to quit")
         else:
-            if not silent:
-                print("\nQUIT:\n"+"-"*50+"\nError: Failure to quit")
+            print("\nQUIT:\n" + "-" * 50 + "\nSuccess")
+            sys.exit()
 
     def r2(self, cmd):
         """
@@ -298,11 +311,7 @@ class OpenBinTool:
         cmd = None
         while True:
             cmd = input("> ").split()
-            if cmd[0] in ["a", "asm"]:
-                self.asm()
-            elif cmd[0] in ["d", "disasm"]:
-                self.disasm()
-            elif cmd[0] in ["f", "file"]:
+            if cmd[0] in ["f", "file"]:
                 self.file()
             elif cmd[0] in ["h", "help"]:
                 self.repl_usage()
@@ -310,14 +319,22 @@ class OpenBinTool:
                 self.info()
             elif cmd[0] in ["l", "load"]:
                 self.load(cmd)
-            elif cmd[0] in ["q", "quit"]:
-                self.quit()
-            elif cmd[0] in ["r", "radare2"]:
-                self.r2(cmd)
             elif cmd[0] in ["s", "strings"]:
                 self.strings(cmd)
-            elif cmd[0] in ["v", "virus"]:
-                self.virus()
+            elif cmd[0] in ["q", "quit"]:
+                self.quit()
+            elif self.smartsock:
+                if cmd[0] in ["a", "asm"]:
+                    self.asm()
+                elif cmd[0] in ["d", "disasm"]:
+                    self.disasm()
+                elif cmd[0] in ["r", "radare2"]:
+                    self.r2(cmd)
+                elif cmd[0] in ["v", "virus"]:
+                    self.virus()
+                else:
+                    print("Command {} currently not supported".format(cmd))
+                    print("Enter (h)elp for a list of commands")
             else:
                 print("Command {} currently not supported".format(cmd))
                 print("Enter (h)elp for a list of commands")
