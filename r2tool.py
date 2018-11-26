@@ -56,7 +56,7 @@ def docs():
     print(linkedlibs.__doc__)
     print(mainaddr.__doc__)
     print(pipe.__doc__)
-    print(secuity.__doc__)
+    print(security.__doc__)
     print(sections.__doc__)
 
 

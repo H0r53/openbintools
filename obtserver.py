@@ -57,9 +57,9 @@ def handler(client, addr):
     try:
         # Diffie Hellman Key Exchange
         aa = int(smartsock.recv())
-        bb = (smartsock.sharedBase ** smartsock.secret) % smartsock.sharedPrime
+        bb = (smartsock.shared_base ** smartsock.secret) % smartsock.shared_prime
         smartsock.send(str(bb))
-        key = (aa ** smartsock.secret) % smartsock.sharedPrime
+        key = (aa ** smartsock.secret) % smartsock.shared_prime
         smartsock.key = bytes(str(key), 'utf-8')
 
         file_mem = None

@@ -223,10 +223,10 @@ class OpenBinTool:
         Diffie Hellman key exchange
         :return:
         """
-        aa = (self.smartsock.sharedBase**self.smartsock.secret) % self.smartsock.sharedPrime
+        aa = (self.smartsock.shared_base**self.smartsock.secret) % self.smartsock.shared_prime
         self.smartsock.send(str(aa))
         bb = int(self.smartsock.recv())
-        key = (bb**self.smartsock.secret) % self.smartsock.sharedPrime
+        key = (bb**self.smartsock.secret) % self.smartsock.shared_prime
         key = bytes(str(key), 'utf-8')
         return key
 

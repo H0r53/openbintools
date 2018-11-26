@@ -1,23 +1,30 @@
 #!/usr/bin/python3
 
 """
-# Authors:      Jacob Mills, Brandon Everhart
-# Date:         09/22/2018
-#
-# Description:  A network-based x86_64 (dis)/assembler API for Python
-#
-# Changelog:
-#   - 9/22 Added crypto
-#
-#   - 9/18 Added module, method, and class docstrings
-#   - 9/18 Cleaned formatting based on PyCharm, PyLint3, PEP8
-#   - 9/18 PyLint score 7.50 --> 10.00/10
-#
-#   - Moved to python3#
-#   - Formatting according to PyCharm and PEP8
-#   - Created SmartSocket.py
-#   - Changed types in send from str to bytes (required for py3 ??)
-#
+    File:
+        - smartsocket.py
+
+    Authors:
+        - Jacob Mills,
+        - Brandon Everhart,
+        - Taylor Shields
+
+    Date: 11/25/2018
+
+    Description:
+        - A network-based x86_64 (dis)/assembler API for Python.
+
+    Changelog:
+        - 9/18 Created SmartSocket
+        - 9/18 Added module, method, and class docstrings
+        - 9/18 Moved to python3
+        - 9/18 Changed types in send from str to bytes (required for py3 ??)
+        - 9/18 Cleaned formatting based on PyCharm, PyLint3, PEP8
+        - 9/18 Pylint score 7.50 --> 10.00/10
+        - 9/22 Added crypto functionality
+        - 11/25 Documented
+        - 11/25 Cleaned formatting based on PyCharm, PyLint3, PEP8
+        - 11/25 Pylint score 8.71/10 --> 10.00/10
 """
 
 import struct
@@ -26,37 +33,102 @@ from Crypto.Cipher import Blowfish
 from Crypto import Random
 
 
-class SmartSocket(object):
+def docs():
     """
-    Class DocString
+    Function:
+        smartsocket.docs()
+
+        Description:
+            Prints all docstrings related to this file.
+
+        Parameters:
+            - None
+
+        Return:
+            - None
+    """
+    print(__doc__)
+    print(docs.__doc__)
+    print(SmartSocket.__init__.__doc__)
+    print(SmartSocket.send.__doc__)
+    print(SmartSocket.recv.__doc__)
+    print(SmartSocket.recvall.__doc__)
+    print(SmartSocket.encrypt.__doc__)
+    print(SmartSocket.decrypt.__doc__)
+    print(SmartSocket.pad.__doc__)
+    print(SmartSocket.unpad.__doc__)
+    print(SmartSocket.close.__doc__)
+
+
+class SmartSocket():
+    """
+    Class:
+        smartsocket.SmartSocket
+
+        Description:
+            -
+
+        Parameters:
+            - None
+
+        Functions:
+            - __init__()
+            - send()
+            - recv()
+            - recvall()
+            - encrypt()
+            - decrypt()
+            - pad()
+            - unpad()
+            - close()
     """
     def __init__(self, socket):
         """
-        Method DocStrings
-        :param socket:
+        Function:
+            smartsocket.SmartSocket.__init__()
+
+        Description:
+            -
+
+        Parameters:
+            - socket:
+                Description - ,
+                Data Type - socket,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+
+        Return:
+            - None
         """
         self.socket = socket
         self.blocksize = Blowfish.block_size    # Default Blowfish blocksize
-        self.sharedPrime = 23
-        self.sharedBase = 5
+        self.shared_prime = 23
+        self.shared_base = 5
         self.secret = random.SystemRandom().getrandbits(20)
         self.key = b'arbitrarily long key'
         self.mode = Blowfish.MODE_CBC           # Do we want CBC??
 
     def send(self, data):
         """
-        Method SmartSocket.send()
+        Function:
+            smartsocket.SmartSocket.send()
 
-        A '1' or '0' is appended to the beginning of the msg to represent if
-        encryption/decryption is needed, this means when receiving data we
-        must check and remove the first byte.
+        Description:
+            - A '1' or '0' is appended to the beginning of the msg to represent if
+            encryption/decryption is needed; this means when receiving data we
+            must check and remove the first byte.
+            - However, when sending the length of the buffer, the extra byte is not sent
+            so the getlen flag is added to the recv and recvall method.
 
-        However, when sending the length of the buffer the extra byte is not sent
-            so the getlen flag is added to the recv and recvall method
+        Parameters:
+            - data:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
 
-        :param data:
-        :param encrypt:
-        :return:
+        Return:
+            - None
         """
         if not isinstance(data, bytes):
             data = bytes(data, 'utf-8')
@@ -66,16 +138,23 @@ class SmartSocket(object):
 
     def recv(self):
         """
-        Method SmartSock.recv()
+        Function:
+            smartsocket.SmartSocket.recv()
 
-        A '1' or '0' is appended to the beginning of the msg to represent if
-        encryption/decryption is needed, this means when receiving data we
-        must check and remove the first byte.
+        Description:
+            - A '1' or '0' is appended to the beginning of the msg to represent if
+            encryption/decryption is needed, this means when receiving data we
+            must check and remove the first byte.
+            - However, when sending the length of the buffer the extra byte is not sent
+            so the getlen flag is added to the recv and recvall method.
 
-        However, when sending the length of the buffer the extra byte is not sent
-            so the getlen flag is added to the recv and recvall method
+        Parameters:
+            - None
 
-        :return:
+        Return:
+            - self.decrypt(ciphertext):
+                Description -
+                Data Type -
         """
         lengthbuf = self.recvall(4)
         length, = struct.unpack('!I', lengthbuf)
@@ -84,9 +163,23 @@ class SmartSocket(object):
 
     def recvall(self, count):
         """
-        Method SmartSock.recvall()
-        :param count:
-        :return:
+        Function:
+            smartsocket.SmartSocket.recvall()
+
+        Description:
+            -
+
+        Parameters:
+            - count:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+
+        Return:
+            - retval:
+                Description -
+                Data Type -
         """
         retval = b''
         while count:
@@ -99,9 +192,23 @@ class SmartSocket(object):
 
     def encrypt(self, plaintext):
         """
-        Method SmartSocket.encrypt()
-        :param plaintext:
-        :return:
+        Function:
+            smartsocket.SmartSocket.encrypt()
+
+        Description:
+            -
+
+        Parameters:
+            - plaintext:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+
+        Return:
+            - msg:
+                Description -
+                Data Type -
         """
         nonce = Random.new().read(self.blocksize)
         cipher = Blowfish.new(self.key, self.mode, nonce)
@@ -111,9 +218,23 @@ class SmartSocket(object):
 
     def decrypt(self, ciphertext):
         """
-        Method SmartSocket.decrypt()
-        :param ciphertext:
-        :return:
+        Function:
+            smartsocket.SmartSocket.decrypt()
+
+        Description:
+            -
+
+        Parameters:
+            - ciphertext:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+
+        Return:
+            - msg:
+                Description -
+                Data Type -
         """
         nonce = ciphertext[:self.blocksize]
         ciphertext = ciphertext[self.blocksize:]
@@ -124,21 +245,31 @@ class SmartSocket(object):
 
     def pad(self, plaintext):
         """
-        Method SmartSocket.pad()
+        Function:
+            smartsocket.SmartSocket.pad()
 
-        msg is padded with the repeated bytes of the pad length.
-        The last byte encodes how many bytes of padding to remove
+        Description:
+            - msg is padded with the repeated bytes of the pad length.
+            - The last byte encodes how many bytes of padding to remove.
+            - Example:
+                if blocksize = 20 and len(msg) = 14
+                    then pad_length = 6
+                then
+                    padding = \x06\x06\x06\x06\x06\x06\
+                and
+                    msg = msg + padding\
 
-        Example:
-            if blocksize = 20 and len(msg) = 14
-                then pad_length = 6
-            then
-                padding = \x06\x06\x06\x06\x06\x06\
-            and
-                msg = msg + padding\
+        Parameters:
+            - plaintext:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
 
-        :param plaintext:
-        :return:
+        Return:
+            - struct.pack('b' * pad_length, *padding):
+                Description -
+                Data Type -
         """
         pad_length = self.blocksize - (len(plaintext) % self.blocksize)
         padding = [pad_length] * pad_length
@@ -147,12 +278,23 @@ class SmartSocket(object):
     @staticmethod
     def unpad(msg):
         """
-        Method SmartSocket.unpad()
+        Function:
+            smartsocket.SmartSocket.unpad()
 
-        The last byte encodes how many bytes of padding to remove
+        Description:
+            -  The last byte encodes how many bytes of padding to remove.
 
-        :param msg:
-        :return:
+        Parameters:
+            - msg:
+                Description - ,
+                Data Type - ,
+                Requirement - mandatory,
+                Argument Type - Positional (1st)
+
+        Return:
+            - msg[:-pad_length]
+                Description -
+                Data Type -
         """
         if isinstance(msg[-1], int):
             pad_length = msg[-1]
@@ -162,19 +304,20 @@ class SmartSocket(object):
 
     def close(self):
         """
-        Method DocString
-        :return:
+        Function:
+            smartsocket.SmartSocket.close()
+
+        Description:
+            -
+
+        Parameters:
+            - None
+
+        Return:
+            - None
         """
         self.socket.close()
 
 
-def main():
-    """
-    Function DocString
-    :return:
-    """
-    print("SmartSocket.py - main() - Nothing to do")
-
-
 if __name__ == "__main__":
-    main()
+    docs()
