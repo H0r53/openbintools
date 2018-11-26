@@ -22,11 +22,11 @@
         - 9/17 Created
         - 11/25 Documented
         - 11/25 Cleaned formatting based on PyCharm, PyLint3, PEP8
-        - 11/25 Pylint score 2.71/10 --> 3.56/10
+        - 11/25 Pylint score 2.71/10 --> 3.15/10
             Note:
                 Ignored "Line too long" for readability purposes
-                Ignored "Too few public methods" for
-                Ignored "Too many statements" for
+                Ignored "Too few public methods"
+                Ignored "Too many statements"
 """
 
 
@@ -50,7 +50,6 @@ def docs():
     print(MagicTool.__init__.__doc__)
     print(MagicTool.find_magic.__doc__)
     print(MagicTool.loadfiles.__doc__)
-    print(FileUtils.hexstr2hexarray.__doc__)
 
 
 class FileObject():
@@ -59,7 +58,8 @@ class FileObject():
         magictool.FileObject
 
         Description:
-            -
+            - Class used to create a FileObject object which
+            contains relevant file type information.
 
         Parameters:
             - None
@@ -73,27 +73,27 @@ class FileObject():
             magictool.FileObject.__init__()
 
         Description:
-            -
+            - Initializes a FileObject object by assigning the arguments to the variables.
 
         Parameters:
             - description:
-                Description - ,
-                Data Type - ,
+                Description - English description of file type,
+                Data Type - string,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
             - offset:
-                Description - ,
-                Data Type - ,
+                Description - offset to the magic number,
+                Data Type - integer,
                 Requirement - mandatory,
                 Argument Type - Positional (2nd)
             - extensions:
-                Description - ,
-                Data Type - ,
+                Description - relevant extensions for the file type (ex: .pdf, .exe),
+                Data Type - list of strings,
                 Requirement - mandatory,
                 Argument Type - Positional (3rd)
             - magic:
-                Description - ,
-                Data Type - ,
+                Description - bytes representing file type,
+                Data Type - list of hex bytes,
                 Requirement - mandatory,
                 Argument Type - Positional (4th)
 
@@ -112,7 +112,7 @@ class MagicTool():
         magictool.MagicTool
 
         Description:
-            -
+            - Utility used to match an input file to corresponding file types.
 
         Parameters:
             - None
@@ -128,7 +128,7 @@ class MagicTool():
            magictool.MagicTool.__init__()
 
         Description:
-            - Creates list of file magic numbers by running magictool.loadfiles().
+            - Creates list of file objects by running magictool.loadfiles().
 
         Parameters:
             - None
@@ -145,19 +145,20 @@ class MagicTool():
             magictool.MagicTool.find_magic()
 
         Description:
-            -
+            - Checks the input file against the list of loaded
+            file objects and returns all corresponding file types.
 
         Parameters:
             - sourcebytes:
-                Description - ,
-                Data Type - ,
+                Description - byte stream representation of a file,
+                Data Type - string of bytes,
                 Requirement - mandatory,
                 Argument Type - Positional (1st)
 
         Return:
             - retval:
-                Description -
-                Data Type -
+                Description - identified file type of input file
+                Data Type - string
         """
         retval = ""
         matches = 0
@@ -185,7 +186,7 @@ class MagicTool():
             magictool.MagicTool.loadfiles()
 
         Description:
-            - List of different magic numbers with their associated file type information.
+            - Creates list of different magic numbers with their associated file type information.
             - Note: Sources defined from data on
             https://en.wikipedia.org/wiki/List_of_file_signatures
 
@@ -335,59 +336,6 @@ class MagicTool():
         self.files.append(FileObject("Microsoft Zone Identifier for URL Security Zones", 0x0, ["Identifier"], [0x5B, 0x5A, 0x6F, 0x6E, 0x65, 0x54, 0x72, 0x61, 0x6E, 0x73, 0x66, 0x65, 0x72, 0x5D]))
         self.files.append(FileObject("Email Message var5", 0x0, ["eml"], [0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x64]))
         self.files.append(FileObject("Tableau Datasource", 0x0, ["tde"], [0x20, 0x02, 0x01, 0x62, 0xA0, 0x1E, 0xAB, 0x07, 0x02, 0x00, 0x00, 0x00]))
-
-
-class FileUtils():
-    """
-    Class:
-        magictool.FileUtils
-
-        Description:
-            -
-
-        Parameters:
-            - None
-
-        Functions:
-            - hexstr2hexarray()
-    """
-    @staticmethod
-    def hexstr2hexarray(data, delimiter=" "):
-        """
-        Function:
-            magictool.FileUtils.hexstr2hexarray()
-
-        Description:
-            -
-
-        Parameters:
-            - data:
-                Description - ,
-                Data Type - ,
-                Requirement - mandatory,
-                Argument Type - Positional (1st)
-            - delimiter:
-                Description - ,
-                Data Type - ,
-                Requirement - optional(default=" ")
-                Argument Type - Positional (2nd)
-
-        Return:
-            - retval:
-                Description -
-                Data Type -
-        """
-        tmp = data.split(delimiter)
-        retval = "["
-        for i in tmp:
-            if i == "??":
-                retval += "None"
-            else:
-                retval += "0x" + i
-            if i is not tmp[len(tmp) - 1]:
-                retval += ", "
-        retval += "]"
-        return retval
 
 
 if __name__ == "__main__":
