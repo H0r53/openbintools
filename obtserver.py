@@ -30,7 +30,7 @@
 
 
 import socket
-import pwn
+# import pwn
 import _thread
 import threading
 import os
@@ -39,7 +39,7 @@ import signal
 import sys
 
 import smartsocket
-import obtdisasm
+import pttool
 import r2tool
 import virustotal_api
 
@@ -63,7 +63,6 @@ class MyThreads(threading.Thread):
         :return:
         """
         smartsock = smartsocket.SmartSocket(self.client)
-        disassembler = obtdisasm.ObtDisasm()
 
         file_mem = None
         file_disk = [None, None]
@@ -86,15 +85,13 @@ class MyThreads(threading.Thread):
 
                 # Match request
                 if data == b"asm":
-                    smartsock.send("STATUS: OK - Begin")
-                    data = smartsock.recv()
-                    senddata = pwn.asm(data)
-                    smartsock.send(senddata)
+                    smartsock.send("STATUS: OK - Asm")
+                    result = pttool.asm(file_mem)
+                    smartsock.send(result)
                 elif data == b"disasm":
                     smartsock.send("STATUS: OK - Disasm")
-                    senddata = disassembler.disasm(file_mem)
-                    print(senddata)
-                    smartsock.send(senddata)
+                    result = pttool.disasm(file_disk[0])
+                    smartsock.send(result)
                 elif data == b"load":
                     # Check if a file has been loaded to disk
                     if None in file_disk:
