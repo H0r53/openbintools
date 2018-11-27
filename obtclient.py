@@ -61,9 +61,9 @@ class OpenBinTool:
 
         # cli argument parser
         self.parser = None
-		
+
         # exit flag
-        exit_flag = False
+        self.exit_flag = False
 
     def asm(self):
         """
@@ -225,7 +225,7 @@ class OpenBinTool:
                 info = obj.ELF.info()
             elif obj.PE:
                 info = obj.PE.info()
-				
+
             print(info)
         else:
             print("\nINFO:\n"+"-"*50+"\nError: Possibly no binary loaded")
@@ -278,8 +278,8 @@ class OpenBinTool:
         :return:
         """
 
-        exit_flag = True
-		
+        self.exit_flag = True
+
         if self.smartsock:
             self.smartsock.send("quit")
             data = self.smartsock.recv()
@@ -424,7 +424,7 @@ def main():
     :return:
     """
     # Local variables
-    host = 'tafers.net'  # needs to be in quote
+    host = 'localhost'  # needs to be in quote
     port = 11337
     tool = OpenBinTool()
 
@@ -441,7 +441,7 @@ def main():
                 tool.repl()
             except SystemExit:
                 pass
-            except: #BrokenPipeError:
+            except:  # BrokenPipeError:
                 if not tool.exit_flag:
                     print("ERROR: Connection to server lost.\nSwitching to LOCAL")
                     tool.smartsock = None

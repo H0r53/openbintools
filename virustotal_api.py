@@ -145,11 +145,11 @@ def reports(resource):
         params=params,
         headers=headers
     )
-	
+
+    retval = "VirusTotal service currently unavailable. Please try again later"
     try:
 
         data = response.json()
-		
         if data['response_code'] <= 0:
             # Response queued. Allow a moment for further processing.
             time.sleep(3)
@@ -161,7 +161,6 @@ def reports(resource):
             data = response.json()
             if data['response_code'] <= 0:
                 return data['verbose_msg']
-			 
 
             detections = []
             for vendor in data['scans']:
@@ -179,37 +178,37 @@ sha256:\t\t{}
 scan_date:\t{}
 positives:\t{}
 total:\t\t{}
-permalink:\t{}
-		    """.format(
-			data['response_code'],
-			data['verbose_msg'],
-			data['resource'],
-			data['scan_id'],
-			data['md5'],
-			data['sha1'],
-			data['sha256'],
-			data['scan_date'],
-			data['positives'],
-			data['total'],
-			data['permalink']
-		    )
+permalink:\t{}""".format(
+                    data['response_code'],
+                    data['verbose_msg'],
+                    data['resource'],
+                    data['scan_id'],
+                    data['md5'],
+                    data['sha1'],
+                    data['sha256'],
+                    data['scan_date'],
+                    data['positives'],
+                    data['total'],
+                    data['permalink']
+                )
 
-		    if detections:
-			retval += "\ndetections:"
-			for vendor in detections:
-				retval += "\n\tvendor: {}, detected: true, version: {}, result: {}, update: {}".format(
-					vendor[0],
-					vendor[1]['version'],
-					vendor[1]['result'],
-					vendor[1]['update']
-				)
+                if detections:
+                    retval += "\ndetections:"
+                    for vendor in detections:
+                        retval += "\n\tvendor: {}, detected: true, version: {}, result: {}, update: {}".format(
+                            vendor[0],
+                            vendor[1]['version'],
+                            vendor[1]['result'],
+                            vendor[1]['update']
+                        )
 
             return retval
 
-	except json.decoder.JSONDecodeError:
-		return "VirusTotalAPI returned invalid JSON:\n{}".format(data)
-	except
-		return "VirusTotal service currently unavailable. Please try again later"
+        # except:
+        #     return "VirusTotalAPI returned invalid JSON:\n{}".format(data)
+    except:
+        return retval
+
 
 if __name__ == "__main__":
     docs()
