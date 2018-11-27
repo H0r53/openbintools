@@ -150,15 +150,13 @@ def reports(resource):
     try:
 
         data = response.json()
-        if data['response_code'] <= 0:
-            return "{}".format(data['verbose_msg'])
 
-            detections = []
-            for vendor in data['scans']:
-                if data['scans'][vendor]['detected'] is True:
-                    detections.append([vendor, data['scans'][vendor]])
+        detections = []
+        for vendor in data['scans']:
+            if data['scans'][vendor]['detected'] is True:
+                detections.append([vendor, data['scans'][vendor]])
 
-                    retval = """
+        retval = """
 response_code:\t{}
 verbose_msg:\t{}
 resource:\t{}
@@ -170,30 +168,30 @@ scan_date:\t{}
 positives:\t{}
 total:\t\t{}
 permalink:\t{}""".format(
-                    data['response_code'],
-                    data['verbose_msg'],
-                    data['resource'],
-                    data['scan_id'],
-                    data['md5'],
-                    data['sha1'],
-                    data['sha256'],
-                    data['scan_date'],
-                    data['positives'],
-                    data['total'],
-                    data['permalink']
+            data['response_code'],
+            data['verbose_msg'],
+            data['resource'],
+            data['scan_id'],
+            data['md5'],
+            data['sha1'],
+            data['sha256'],
+            data['scan_date'],
+            data['positives'],
+            data['total'],
+            data['permalink']
+        )
+
+        if detections:
+            retval += "\ndetections:"
+            for vendor in detections:
+                retval += "\n\tvendor: {}, detected: true, version: {}, result: {}, update: {}".format(
+                    vendor[0],
+                    vendor[1]['version'],
+                    vendor[1]['result'],
+                    vendor[1]['update']
                 )
 
-                if detections:
-                    retval += "\ndetections:"
-                    for vendor in detections:
-                        retval += "\n\tvendor: {}, detected: true, version: {}, result: {}, update: {}".format(
-                            vendor[0],
-                            vendor[1]['version'],
-                            vendor[1]['result'],
-                            vendor[1]['update']
-                        )
-
-            return retval
+        return retval
 
         # except:
         #     return "VirusTotalAPI returned invalid JSON:\n{}".format(data)
