@@ -151,16 +151,7 @@ def reports(resource):
 
         data = response.json()
         if data['response_code'] <= 0:
-            # Response queued. Allow a moment for further processing.
-            time.sleep(3)
-            response = get(
-                'https://www.virustotal.com/vtapi/v2/file/report',
-                params=params,
-                headers=headers
-            )
-            data = response.json()
-            if data['response_code'] <= 0:
-                return data['verbose_msg']
+            return "{}".format(return data['verbose_msg'])
 
             detections = []
             for vendor in data['scans']:
