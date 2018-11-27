@@ -41,6 +41,7 @@ import stringtool
 import loadertool
 
 
+
 class OpenBinTool:
     """
     Class DocString
@@ -60,6 +61,9 @@ class OpenBinTool:
 
         # cli argument parser
         self.parser = None
+		
+		# exit flag
+		exit_flag = False
 
     def asm(self):
         """
@@ -273,6 +277,8 @@ class OpenBinTool:
         Method OpenBinTool.quit()
         :return:
         """
+		exit_flag = True
+		
         if self.smartsock:
             self.smartsock.send("quit")
             data = self.smartsock.recv()
@@ -435,9 +441,10 @@ def main():
             except SystemExit:
                 pass
             except: #BrokenPipeError:
-                print("ERROR: Connection to server lost.\nSwitching to LOCAL")
-                tool.smartsock = None
-                tool.repl()
+			    if not tool.exit_flag:
+                    print("ERROR: Connection to server lost.\nSwitching to LOCAL")
+                    tool.smartsock = None
+                    tool.repl()
         # Else execute provided arguments and exit
         else:
             tool.cli()

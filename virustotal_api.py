@@ -145,65 +145,71 @@ def reports(resource):
         params=params,
         headers=headers
     )
-
-    data = response.json()
 	
-    if data['response_code'] == 0:
-        # Response queued. Allow a moment for further processing.
-        time.sleep(3)
-        response = get(
-        'https://www.virustotal.com/vtapi/v2/file/report',
-        params=params,
-        headers=headers
-        )
-        data = response.json()
-        if data['response_code'] == 0:
-            return data['verbose_msg']
-		 
+	try:
 
-    detections = []
-    for vendor in data['scans']:
-        if data['scans'][vendor]['detected'] is True:
-            detections.append([vendor, data['scans'][vendor]])
+		data = response.json()
+		
+		if data['response_code'] <= 0:
+			# Response queued. Allow a moment for further processing.
+			time.sleep(3)
+			response = get(
+			'https://www.virustotal.com/vtapi/v2/file/report',
+			params=params,
+			headers=headers
+			)
+			data = response.json()
+			if data['response_code'] <= 0:
+				return data['verbose_msg']
+			 
 
-    retval = """
-response_code:\t{}
-verbose_msg:\t{}
-resource:\t{}
-scan_id:\t{}
-md5:\t\t{}
-sha1:\t\t{}
-sha256:\t\t{}
-scan_date:\t{}
-positives:\t{}
-total:\t\t{}
-permalink:\t{}
-    """.format(
-        data['response_code'],
-        data['verbose_msg'],
-        data['resource'],
-        data['scan_id'],
-        data['md5'],
-        data['sha1'],
-        data['sha256'],
-        data['scan_date'],
-        data['positives'],
-        data['total'],
-        data['permalink']
-    )
+		detections = []
+		for vendor in data['scans']:
+			if data['scans'][vendor]['detected'] is True:
+				detections.append([vendor, data['scans'][vendor]])
 
-    if detections:
-        retval += "\ndetections:"
-        for vendor in detections:
-            retval += "\n\tvendor: {}, detected: true, version: {}, result: {}, update: {}".format(
-                vendor[0],
-                vendor[1]['version'],
-                vendor[1]['result'],
-                vendor[1]['update']
-            )
+		retval = """
+	response_code:\t{}
+	verbose_msg:\t{}
+	resource:\t{}
+	scan_id:\t{}
+	md5:\t\t{}
+	sha1:\t\t{}
+	sha256:\t\t{}
+	scan_date:\t{}
+	positives:\t{}
+	total:\t\t{}
+	permalink:\t{}
+		""".format(
+			data['response_code'],
+			data['verbose_msg'],
+			data['resource'],
+			data['scan_id'],
+			data['md5'],
+			data['sha1'],
+			data['sha256'],
+			data['scan_date'],
+			data['positives'],
+			data['total'],
+			data['permalink']
+		)
 
-    return retval
+		if detections:
+			retval += "\ndetections:"
+			for vendor in detections:
+				retval += "\n\tvendor: {}, detected: true, version: {}, result: {}, update: {}".format(
+					vendor[0],
+					vendor[1]['version'],
+					vendor[1]['result'],
+					vendor[1]['update']
+				)
 
+		return retval
+
+	except json.decoder.JSONDecodeError:
+		return "VirusTotalAPI returned invalid JSON:\n{}".format(data)
+	except
+		return "VirusTotal service currently unavailable. Please try again later"
 
 if __name__ == "__main__":
     docs()
