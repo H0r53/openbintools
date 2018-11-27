@@ -151,7 +151,7 @@ def reports(resource):
 
         data = response.json()
         if data['response_code'] <= 0:
-            return "{}".format(return data['verbose_msg'])
+            return "{}".format(data['verbose_msg'])
 
             detections = []
             for vendor in data['scans']:
