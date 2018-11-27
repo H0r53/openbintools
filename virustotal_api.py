@@ -33,6 +33,7 @@
 """
 
 from requests import get, post
+import time
 
 APIKEY = 'Copy your personal VirusTotal Community API key here'
 
@@ -146,6 +147,19 @@ def reports(resource):
     )
 
     data = response.json()
+	
+    if data['response_code'] == 0:
+        # Response queued. Allow a moment for further processing.
+        time.sleep(3)
+        response = get(
+        'https://www.virustotal.com/vtapi/v2/file/report',
+        params=params,
+        headers=headers
+        )
+        data = response.json()
+        if data['response_code'] == 0:
+            return data['verbose_msg']
+		 
 
     detections = []
     for vendor in data['scans']:
