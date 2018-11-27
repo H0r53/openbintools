@@ -22,13 +22,14 @@ class LoaderTool(object):
 
         :param filename:
         """
+        self.ELF = None
+        self.PE = None
         self.isELF = self.check_elf_magic(filename)
         self.isPE = self.check_pe_magic(filename)
         if not self.isELF and not self.isPE:
             print("ERROR: {} is not a supported format (ELF,PE)".format(filename))
             return
-        self.ELF = None
-        self.PE = None
+
 
         if self.isELF:
             self.ELF = ELFClass(filename)

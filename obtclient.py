@@ -216,11 +216,12 @@ class OpenBinTool:
         if self.binary_path:
             print("\nINFO:\n"+"-"*50)
             obj = loadertool.LoaderTool(self.binary_path)
+            info = "Executable Format Not Detected"
             if obj.ELF:
                 info = obj.ELF.info()
             elif obj.PE:
                 info = obj.PE.info()
-
+				
             print(info)
         else:
             print("\nINFO:\n"+"-"*50+"\nError: Possibly no binary loaded")
@@ -416,7 +417,7 @@ def main():
     :return:
     """
     # Local variables
-    host = 'localhost'  # needs to be in quote
+    host = 'tafers.net'  # needs to be in quote
     port = 11337
     tool = OpenBinTool()
 
