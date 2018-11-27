@@ -62,8 +62,8 @@ class OpenBinTool:
         # cli argument parser
         self.parser = None
 		
-		# exit flag
-		exit_flag = False
+        # exit flag
+        exit_flag = False
 
     def asm(self):
         """
@@ -277,7 +277,8 @@ class OpenBinTool:
         Method OpenBinTool.quit()
         :return:
         """
-		exit_flag = True
+
+        exit_flag = True
 		
         if self.smartsock:
             self.smartsock.send("quit")
@@ -441,7 +442,7 @@ def main():
             except SystemExit:
                 pass
             except: #BrokenPipeError:
-			    if not tool.exit_flag:
+                if not tool.exit_flag:
                     print("ERROR: Connection to server lost.\nSwitching to LOCAL")
                     tool.smartsock = None
                     tool.repl()

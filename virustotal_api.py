@@ -146,41 +146,41 @@ def reports(resource):
         headers=headers
     )
 	
-	try:
+    try:
 
-		data = response.json()
+        data = response.json()
 		
-		if data['response_code'] <= 0:
-			# Response queued. Allow a moment for further processing.
-			time.sleep(3)
-			response = get(
-			'https://www.virustotal.com/vtapi/v2/file/report',
-			params=params,
-			headers=headers
-			)
-			data = response.json()
-			if data['response_code'] <= 0:
-				return data['verbose_msg']
+        if data['response_code'] <= 0:
+            # Response queued. Allow a moment for further processing.
+            time.sleep(3)
+            response = get(
+                'https://www.virustotal.com/vtapi/v2/file/report',
+                params=params,
+                headers=headers
+            )
+            data = response.json()
+            if data['response_code'] <= 0:
+                return data['verbose_msg']
 			 
 
-		detections = []
-		for vendor in data['scans']:
-			if data['scans'][vendor]['detected'] is True:
-				detections.append([vendor, data['scans'][vendor]])
+            detections = []
+            for vendor in data['scans']:
+                if data['scans'][vendor]['detected'] is True:
+                    detections.append([vendor, data['scans'][vendor]])
 
-		retval = """
-	response_code:\t{}
-	verbose_msg:\t{}
-	resource:\t{}
-	scan_id:\t{}
-	md5:\t\t{}
-	sha1:\t\t{}
-	sha256:\t\t{}
-	scan_date:\t{}
-	positives:\t{}
-	total:\t\t{}
-	permalink:\t{}
-		""".format(
+                    retval = """
+response_code:\t{}
+verbose_msg:\t{}
+resource:\t{}
+scan_id:\t{}
+md5:\t\t{}
+sha1:\t\t{}
+sha256:\t\t{}
+scan_date:\t{}
+positives:\t{}
+total:\t\t{}
+permalink:\t{}
+		    """.format(
 			data['response_code'],
 			data['verbose_msg'],
 			data['resource'],
@@ -192,9 +192,9 @@ def reports(resource):
 			data['positives'],
 			data['total'],
 			data['permalink']
-		)
+		    )
 
-		if detections:
+		    if detections:
 			retval += "\ndetections:"
 			for vendor in detections:
 				retval += "\n\tvendor: {}, detected: true, version: {}, result: {}, update: {}".format(
@@ -204,7 +204,7 @@ def reports(resource):
 					vendor[1]['update']
 				)
 
-		return retval
+            return retval
 
 	except json.decoder.JSONDecodeError:
 		return "VirusTotalAPI returned invalid JSON:\n{}".format(data)
