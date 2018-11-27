@@ -286,7 +286,7 @@ class OpenBinTool:
                     print("\nQUIT:\n"+"-"*50+"\nError: Failure to quit")
         else:
             print("\nQUIT:\n" + "-" * 50 + "\nSuccess")
-            sys.exit()
+        sys.exit()
 
     def r2(self, cmd):
         """
@@ -432,7 +432,9 @@ def main():
             # REPL menu interface
             try:
                 tool.repl()
-            except BrokenPipeError:
+            except SystemExit:
+                pass
+            except: #BrokenPipeError:
                 print("ERROR: Connection to server lost.\nSwitching to LOCAL")
                 tool.smartsock = None
                 tool.repl()
